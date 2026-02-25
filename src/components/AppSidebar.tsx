@@ -8,6 +8,8 @@ import {
   Settings,
   LogOut,
   Volume2,
+  UsersRound,
+  UserCircle,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -16,9 +18,11 @@ const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Materiais", url: "/dashboard/materiais", icon: Package },
   { title: "Clientes", url: "/dashboard/clientes", icon: Users },
+  { title: "Usuários", url: "/dashboard/usuarios", icon: UsersRound },
   { title: "Calculadora", url: "/dashboard/calculadora", icon: Calculator },
   { title: "Agenda", url: "/dashboard/agenda", icon: Calendar },
   { title: "Financeiro", url: "/dashboard/financeiro", icon: BarChart3 },
+  { title: "Perfil", url: "/dashboard/perfil", icon: UserCircle },
   { title: "Configurações", url: "/dashboard/configuracoes", icon: Settings },
 ];
 

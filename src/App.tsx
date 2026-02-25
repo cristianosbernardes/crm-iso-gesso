@@ -12,6 +12,8 @@ import Calculadora from "./pages/Calculadora";
 import Agenda from "./pages/Agenda";
 import Financeiro from "./pages/Financeiro";
 import Configuracoes from "./pages/Configuracoes";
+import Usuarios from "./pages/Usuarios";
+import Perfil from "./pages/Perfil";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,9 +30,11 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="materiais" element={<Materiais />} />
             <Route path="clientes" element={<Clientes />} />
+            <Route path="usuarios" element={<Usuarios />} />
             <Route path="calculadora" element={<Calculadora />} />
             <Route path="agenda" element={<Agenda />} />
             <Route path="financeiro" element={<Financeiro />} />
+            <Route path="perfil" element={<Perfil />} />
             <Route path="configuracoes" element={<Configuracoes />} />
           </Route>
           <Route path="*" element={<NotFound />} />
