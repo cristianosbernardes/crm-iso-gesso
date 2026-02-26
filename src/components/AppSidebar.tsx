@@ -16,7 +16,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Materiais", url: "/dashboard/materiais", icon: Package },
+  { title: "Produtos", url: "/dashboard/produtos", icon: Package },
   { title: "Clientes", url: "/dashboard/clientes", icon: Users },
   { title: "Usuários", url: "/dashboard/usuarios", icon: UsersRound },
   { title: "Calculadora", url: "/dashboard/calculadora", icon: Calculator },
