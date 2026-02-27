@@ -987,7 +987,75 @@ const ProdutoDetalhe = () => {
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">{produto.descricao}</p>
+      {/* Galeria de Imagens do Produto */}
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-0">
+            {/* Imagem principal */}
+            <div className="relative bg-muted/30 flex items-center justify-center min-h-[300px] md:min-h-[400px]">
+              {produto.fotos && produto.fotos.length > 0 ? (
+                <img src={produto.fotos[0]} alt={produto.nome} className="object-contain max-h-[400px] w-full p-6" />
+              ) : (
+                <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    {categoriaIcon[produto.categoria] || <Package className="h-10 w-10" />}
+                  </div>
+                  <p className="text-sm">Imagem ilustrativa</p>
+                </div>
+              )}
+              {produto.classificacaoFogo && (
+                <Badge className="absolute top-4 left-4 bg-destructive/90 text-destructive-foreground text-xs gap-1">
+                  <Flame className="h-3 w-3" /> {produto.classificacaoFogo.split("(")[0].trim()}
+                </Badge>
+              )}
+              {"nrc" in produto && (
+                <Badge className="absolute top-4 right-4 bg-primary/90 text-primary-foreground text-xs font-mono">
+                  NRC {(produto as any).nrc}
+                </Badge>
+              )}
+            </div>
+            {/* Painel lateral com info + descrição */}
+            <div className="border-t md:border-t-0 md:border-l p-6 flex flex-col gap-4 bg-card">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">{produto.nome}</h2>
+                <p className="text-xs font-mono text-muted-foreground mt-0.5">{produto.sku}</p>
+              </div>
+              <Badge variant="secondary" className={`${categoriaColor[produto.categoria] || ""} w-fit`}>
+                {produto.categoria}
+              </Badge>
+              <p className="text-sm text-muted-foreground leading-relaxed">{produto.descricao}</p>
+              {produto.especificacao && (
+                <p className="text-xs text-muted-foreground leading-relaxed border-t pt-3">{produto.especificacao}</p>
+              )}
+              {produto.cores && produto.cores.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  <Palette className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                  {produto.cores.map(c => <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>)}
+                </div>
+              )}
+              {produto.dimensoes && (
+                <div className="text-xs text-muted-foreground space-y-0.5 border-t pt-3">
+                  <p className="font-medium text-foreground text-xs mb-1">Dimensões</p>
+                  {produto.dimensoes.comprimento && <p>Comprimento: {produto.dimensoes.comprimento}</p>}
+                  {produto.dimensoes.largura && <p>Largura: {produto.dimensoes.largura}</p>}
+                  {produto.dimensoes.espessura && <p>Espessura: {produto.dimensoes.espessura}</p>}
+                </div>
+              )}
+              {/* Thumbnails placeholder */}
+              <div className="flex gap-2 mt-auto pt-3 border-t">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-14 w-14 rounded-lg bg-muted/50 border flex items-center justify-center">
+                    <Image className="h-5 w-5 text-muted-foreground/30" />
+                  </div>
+                ))}
+                <div className="h-14 w-14 rounded-lg bg-muted/50 border flex items-center justify-center text-xs text-muted-foreground">
+                  +
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Separator />
 
