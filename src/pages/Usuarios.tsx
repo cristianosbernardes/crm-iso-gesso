@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Search, UserPlus, Shield, Mail, Phone, X, TrendingUp,
+  Search, UserPlus, Shield, Mail, Phone, TrendingUp,
   DollarSign, Target, BarChart3, Eye, EyeOff, Percent,
   Calendar, Calculator, Package, FileText, Truck, Settings, Users,
   ChevronRight
@@ -274,244 +275,226 @@ const Usuarios = () => {
         </div>
       </div>
 
-      {/* Two-column layout: List + Detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-5">
-        {/* User Cards */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-3 auto-rows-max">
-          {filtered.map(u => (
-            <Card
-              key={u.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${selectedUser?.id === u.id ? "ring-2 ring-primary shadow-md" : ""}`}
-              onClick={() => setSelectedUser(u)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <Avatar className="h-11 w-11">
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                      {u.nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
+      {/* User Cards - Full Width */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        {filtered.map(u => (
+          <Card
+            key={u.id}
+            className="cursor-pointer transition-all hover:shadow-md hover:border-primary/30"
+            onClick={() => setSelectedUser(u)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <Avatar className="h-11 w-11">
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                    {u.nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm truncate">{u.nome}</h3>
+                  <p className="text-xs text-muted-foreground">{u.cargo}</p>
+                </div>
+                <Badge variant="secondary" className={`text-[10px] ${statusColors[u.status]}`}>{u.status}</Badge>
+              </div>
+              <div className="space-y-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{u.email}</span></div>
+                <div className="flex items-center gap-2"><Phone className="h-3 w-3 shrink-0" /><span>{u.telefone}</span></div>
+              </div>
+              <div className="mt-3 flex items-center justify-between">
+                <Badge variant="secondary" className={`gap-1 text-[10px] ${roleColors[u.role]}`}>
+                  <Shield className="h-2.5 w-2.5" />{roleLabels[u.role]}
+                </Badge>
+                {u.comissaoHabilitada && (
+                  <span className="text-[10px] font-mono text-success flex items-center gap-0.5">
+                    <Percent className="h-2.5 w-2.5" />{u.comissaoPercent}%
+                  </span>
+                )}
+                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {filtered.length === 0 && (
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            <Users className="h-10 w-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">Nenhum colaborador encontrado</p>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Sheet Detail Panel */}
+      <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <SheetContent className="w-full sm:max-w-lg p-0 overflow-y-auto">
+          {selectedUser && (
+            <>
+              <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6">
+                <SheetHeader className="mb-0">
+                  <SheetTitle className="sr-only">{selectedUser.nome}</SheetTitle>
+                </SheetHeader>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-18 w-18 border-2 border-background shadow-md">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold h-18 w-18">
+                      {selectedUser.nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm truncate">{u.nome}</h3>
-                    <p className="text-xs text-muted-foreground">{u.cargo}</p>
-                  </div>
-                  <Badge variant="secondary" className={`text-[10px] ${statusColors[u.status]}`}>{u.status}</Badge>
-                </div>
-                <div className="space-y-1.5 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{u.email}</span></div>
-                  <div className="flex items-center gap-2"><Phone className="h-3 w-3 shrink-0" /><span>{u.telefone}</span></div>
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <Badge variant="secondary" className={`gap-1 text-[10px] ${roleColors[u.role]}`}>
-                    <Shield className="h-2.5 w-2.5" />{roleLabels[u.role]}
-                  </Badge>
-                  {u.comissaoHabilitada && (
-                    <span className="text-[10px] font-mono text-success flex items-center gap-0.5">
-                      <Percent className="h-2.5 w-2.5" />{u.comissaoPercent}%
-                    </span>
-                  )}
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {filtered.length === 0 && (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
-              <Users className="h-10 w-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Nenhum colaborador encontrado</p>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Detail Panel */}
-        <AnimatePresence mode="wait">
-          {selectedUser ? (
-            <motion.div
-              key={selectedUser.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-0 lg:sticky lg:top-6"
-            >
-              <Card className="overflow-hidden">
-                {/* Header */}
-                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-5 relative">
-                  <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => setSelectedUser(null)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16 border-2 border-background shadow-md">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                        {selectedUser.nome.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h2 className="text-lg font-bold text-foreground">{selectedUser.nome}</h2>
-                      <p className="text-sm text-muted-foreground">{selectedUser.cargo}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className={`text-[10px] ${roleColors[selectedUser.role]}`}>
-                          <Shield className="h-2.5 w-2.5 mr-0.5" />{roleLabels[selectedUser.role]}
-                        </Badge>
-                        <Badge variant="secondary" className={`text-[10px] ${statusColors[selectedUser.status]}`}>
-                          {selectedUser.status}
-                        </Badge>
-                      </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">{selectedUser.nome}</h2>
+                    <p className="text-sm text-muted-foreground">{selectedUser.cargo}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="secondary" className={`text-xs ${roleColors[selectedUser.role]}`}>
+                        <Shield className="h-3 w-3 mr-1" />{roleLabels[selectedUser.role]}
+                      </Badge>
+                      <Badge variant="secondary" className={`text-xs ${statusColors[selectedUser.status]}`}>
+                        {selectedUser.status}
+                      </Badge>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <Tabs defaultValue="dados" className="w-full">
-                  <TabsList className="w-full rounded-none border-b bg-transparent p-0 h-auto">
-                    <TabsTrigger value="dados" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2.5 text-xs">Dados</TabsTrigger>
-                    <TabsTrigger value="financeiro" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2.5 text-xs">Comissões</TabsTrigger>
-                    <TabsTrigger value="permissoes" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2.5 text-xs">Permissões</TabsTrigger>
-                    <TabsTrigger value="performance" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2.5 text-xs">Performance</TabsTrigger>
-                  </TabsList>
+              <Tabs defaultValue="dados" className="w-full">
+                <TabsList className="w-full rounded-none border-b bg-transparent p-0 h-auto">
+                  <TabsTrigger value="dados" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex-1 py-3 text-xs">Dados</TabsTrigger>
+                  <TabsTrigger value="financeiro" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex-1 py-3 text-xs">Comissões</TabsTrigger>
+                  <TabsTrigger value="permissoes" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex-1 py-3 text-xs">Permissões</TabsTrigger>
+                  <TabsTrigger value="performance" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex-1 py-3 text-xs">Performance</TabsTrigger>
+                </TabsList>
 
-                  {/* Dados */}
-                  <TabsContent value="dados" className="p-5 space-y-4 mt-0">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 text-sm"><Mail className="h-4 w-4 text-muted-foreground shrink-0" /><span>{selectedUser.email}</span></div>
-                      <div className="flex items-center gap-3 text-sm"><Phone className="h-4 w-4 text-muted-foreground shrink-0" /><span>{selectedUser.telefone}</span></div>
-                      <div className="flex items-center gap-3 text-sm"><Shield className="h-4 w-4 text-muted-foreground shrink-0" /><span>{selectedUser.cargo}</span></div>
+                {/* Dados */}
+                <TabsContent value="dados" className="p-6 space-y-4 mt-0">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-sm"><Mail className="h-4 w-4 text-muted-foreground shrink-0" /><span>{selectedUser.email}</span></div>
+                    <div className="flex items-center gap-3 text-sm"><Phone className="h-4 w-4 text-muted-foreground shrink-0" /><span>{selectedUser.telefone}</span></div>
+                    <div className="flex items-center gap-3 text-sm"><Shield className="h-4 w-4 text-muted-foreground shrink-0" /><span>{selectedUser.cargo}</span></div>
+                  </div>
+                  <Separator />
+                  <Button variant="outline" size="sm" className="w-full">Editar Dados</Button>
+                </TabsContent>
+
+                {/* Comissões */}
+                <TabsContent value="financeiro" className="p-6 space-y-4 mt-0">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium">Habilitar Comissão</Label>
+                      <p className="text-[11px] text-muted-foreground">Ativa cálculo de comissão sobre vendas</p>
+                    </div>
+                    <Switch
+                      checked={selectedUser.comissaoHabilitada}
+                      onCheckedChange={() => toggleComissao(selectedUser.id)}
+                    />
+                  </div>
+
+                  {selectedUser.comissaoHabilitada && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4">
+                      <div>
+                        <Label className="text-sm">Percentual de Comissão</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Input
+                            type="number" min={0} max={100} step={0.5}
+                            value={selectedUser.comissaoPercent}
+                            onChange={e => updateComissaoPercent(selectedUser.id, Number(e.target.value))}
+                            className="w-24 text-center font-mono"
+                          />
+                          <span className="text-sm text-muted-foreground">%</span>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <p className="text-sm font-medium mb-1">Comissão Mês Atual</p>
+                        <p className="text-2xl font-bold text-success">
+                          R$ {comissaoMesAtual(selectedUser).toLocaleString("pt-BR")}
+                        </p>
+                      </div>
+
+                      {selectedUser.historicoComissoes.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Histórico Recente</p>
+                          <div className="space-y-2">
+                            {selectedUser.historicoComissoes.map((h, i) => (
+                              <div key={i} className="flex items-center justify-between text-sm bg-muted/30 rounded-lg px-3 py-2">
+                                <span className="text-muted-foreground">{h.mes}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs text-muted-foreground">{h.vendas} vendas</span>
+                                  <span className="font-mono font-semibold text-foreground">R$ {h.valor.toLocaleString("pt-BR")}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </TabsContent>
+
+                {/* Permissões */}
+                <TabsContent value="permissoes" className="p-6 space-y-3 mt-0">
+                  <p className="text-xs text-muted-foreground mb-1">Defina quais módulos este colaborador pode acessar:</p>
+                  {selectedUser.permissoes.map(p => (
+                    <div key={p.modulo} className="flex items-center justify-between py-1.5">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">{p.icone}</span>
+                        <span>{p.modulo}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {p.ativo ? <Eye className="h-3.5 w-3.5 text-success" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+                        <Switch
+                          checked={p.ativo}
+                          onCheckedChange={() => togglePermissao(selectedUser.id, p.modulo)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </TabsContent>
+
+                {/* Performance */}
+                <TabsContent value="performance" className="p-6 space-y-4 mt-0">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card className="bg-muted/30 border-0">
+                      <CardContent className="p-4 text-center">
+                        <DollarSign className="h-6 w-6 mx-auto text-success mb-1" />
+                        <p className="text-xl font-bold text-foreground">R$ {(selectedUser.totalVendido / 1000).toFixed(0)}k</p>
+                        <p className="text-[11px] text-muted-foreground">Total Vendido</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-muted/30 border-0">
+                      <CardContent className="p-4 text-center">
+                        <Target className="h-6 w-6 mx-auto text-primary mb-1" />
+                        <p className="text-xl font-bold text-foreground">{conversaoRate(selectedUser)}%</p>
+                        <p className="text-[11px] text-muted-foreground">Taxa Conversão</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Visitas Técnicas</span>
+                      <span className="font-mono font-semibold">{selectedUser.visitasTecnicas}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Orçamentos Fechados</span>
+                      <span className="font-mono font-semibold">{selectedUser.orcamentosFechados}</span>
                     </div>
                     <Separator />
-                    <Button variant="outline" size="sm" className="w-full">Editar Dados</Button>
-                  </TabsContent>
-
-                  {/* Comissões */}
-                  <TabsContent value="financeiro" className="p-5 space-y-4 mt-0">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-sm font-medium">Habilitar Comissão</Label>
-                        <p className="text-[11px] text-muted-foreground">Ativa cálculo de comissão sobre vendas</p>
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Conversão</span>
+                        <span className="font-mono">{conversaoRate(selectedUser)}%</span>
                       </div>
-                      <Switch
-                        checked={selectedUser.comissaoHabilitada}
-                        onCheckedChange={() => toggleComissao(selectedUser.id)}
-                      />
+                      <Progress value={conversaoRate(selectedUser)} className="h-2" />
                     </div>
+                  </div>
 
-                    {selectedUser.comissaoHabilitada && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4">
-                        <div>
-                          <Label className="text-sm">Percentual de Comissão</Label>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Input
-                              type="number" min={0} max={100} step={0.5}
-                              value={selectedUser.comissaoPercent}
-                              onChange={e => updateComissaoPercent(selectedUser.id, Number(e.target.value))}
-                              className="w-24 text-center font-mono"
-                            />
-                            <span className="text-sm text-muted-foreground">%</span>
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        <div>
-                          <p className="text-sm font-medium mb-1">Comissão Mês Atual</p>
-                          <p className="text-2xl font-bold text-success">
-                            R$ {comissaoMesAtual(selectedUser).toLocaleString("pt-BR")}
-                          </p>
-                        </div>
-
-                        {selectedUser.historicoComissoes.length > 0 && (
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground mb-2">Histórico Recente</p>
-                            <div className="space-y-2">
-                              {selectedUser.historicoComissoes.map((h, i) => (
-                                <div key={i} className="flex items-center justify-between text-sm bg-muted/30 rounded-lg px-3 py-2">
-                                  <span className="text-muted-foreground">{h.mes}</span>
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-xs text-muted-foreground">{h.vendas} vendas</span>
-                                    <span className="font-mono font-semibold text-foreground">R$ {h.valor.toLocaleString("pt-BR")}</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                  </TabsContent>
-
-                  {/* Permissões */}
-                  <TabsContent value="permissoes" className="p-5 space-y-3 mt-0">
-                    <p className="text-xs text-muted-foreground mb-1">Defina quais módulos este colaborador pode acessar:</p>
-                    {selectedUser.permissoes.map(p => (
-                      <div key={p.modulo} className="flex items-center justify-between py-1.5">
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="text-muted-foreground">{p.icone}</span>
-                          <span>{p.modulo}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {p.ativo ? <Eye className="h-3.5 w-3.5 text-success" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
-                          <Switch
-                            checked={p.ativo}
-                            onCheckedChange={() => togglePermissao(selectedUser.id, p.modulo)}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </TabsContent>
-
-                  {/* Performance */}
-                  <TabsContent value="performance" className="p-5 space-y-4 mt-0">
-                    <div className="grid grid-cols-2 gap-3">
-                      <Card className="bg-muted/30 border-0">
-                        <CardContent className="p-3 text-center">
-                          <DollarSign className="h-5 w-5 mx-auto text-success mb-1" />
-                          <p className="text-lg font-bold text-foreground">R$ {(selectedUser.totalVendido / 1000).toFixed(0)}k</p>
-                          <p className="text-[10px] text-muted-foreground">Total Vendido</p>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-muted/30 border-0">
-                        <CardContent className="p-3 text-center">
-                          <Target className="h-5 w-5 mx-auto text-primary mb-1" />
-                          <p className="text-lg font-bold text-foreground">{conversaoRate(selectedUser)}%</p>
-                          <p className="text-[10px] text-muted-foreground">Taxa Conversão</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Visitas Técnicas</span>
-                        <span className="font-mono font-semibold">{selectedUser.visitasTecnicas}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Orçamentos Fechados</span>
-                        <span className="font-mono font-semibold">{selectedUser.orcamentosFechados}</span>
-                      </div>
-                      <Separator />
-                      <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">Conversão</span>
-                          <span className="font-mono">{conversaoRate(selectedUser)}%</span>
-                        </div>
-                        <Progress value={conversaoRate(selectedUser)} className="h-2" />
-                      </div>
-                    </div>
-
-                    {selectedUser.totalVendido === 0 && (
-                      <p className="text-xs text-muted-foreground text-center py-4">Sem dados de vendas para este colaborador</p>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </Card>
-            </motion.div>
-          ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hidden lg:flex items-center justify-center">
-              <div className="text-center text-muted-foreground py-20">
-                <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Selecione um colaborador</p>
-                <p className="text-xs">para ver os detalhes</p>
-              </div>
-            </motion.div>
+                  {selectedUser.totalVendido === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">Sem dados de vendas para este colaborador</p>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </>
           )}
-        </AnimatePresence>
-      </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
