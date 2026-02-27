@@ -389,7 +389,7 @@ const ProdutoDetalhe = () => {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-6 lg:p-8 space-y-6 max-w-5xl"
+      className="p-6 lg:p-8 space-y-6 w-full"
     >
       {/* Header */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
