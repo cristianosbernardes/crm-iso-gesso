@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowLeft, Package, QrCode, Edit, Layers, Ruler, Wrench, Disc, Sparkles,
   AlertTriangle, TrendingUp, ShieldCheck, Flame, Droplets, Thermometer, Volume2,
@@ -47,26 +48,30 @@ const SectionLa = ({ p }: { p: La }) => {
         <InfoCard icon={<Volume2 className="h-4 w-4" />} label="NRC" value={p.nrc} sub="Coeficiente de redução de ruído" />
       </div>
 
-      {/* Gráfico de absorção */}
+      {/* Gráfico de absorção em sanfona */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" />
-            Coeficientes de Absorção Sonora (α)
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">Melhor desempenho em {bestFreq} (α = {maxAlpha.toFixed(2)})</p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Object.entries(p.alpha).map(([freq, val]) => (
-            <div key={freq} className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="font-medium text-foreground">{freq}</span>
-                <span className="font-mono text-muted-foreground">{val.toFixed(2)}</span>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="alpha" className="border-none">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Coeficientes de Absorção Sonora (α)
+                <span className="text-xs font-normal text-muted-foreground ml-2">Melhor: {bestFreq} (α = {maxAlpha.toFixed(2)})</span>
               </div>
-              <Progress value={val * 100} className="h-2" />
-            </div>
-          ))}
-        </CardContent>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-4 space-y-3">
+              {Object.entries(p.alpha).map(([freq, val]) => (
+                <div key={freq} className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-medium text-foreground">{freq}</span>
+                    <span className="font-mono text-muted-foreground">{val.toFixed(2)}</span>
+                  </div>
+                  <Progress value={val * 100} className="h-2" />
+                </div>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Card>
 
       {/* Aplicações recomendadas */}
