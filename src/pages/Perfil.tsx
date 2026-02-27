@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Sun, Moon, Save } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Shield, Sun, Moon, Save, Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const Perfil = () => {
   const [darkMode, setDarkMode] = useState(() => {
@@ -15,6 +17,35 @@ const Perfil = () => {
     }
     return false;
   });
+
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [showSenhaAtual, setShowSenhaAtual] = useState(false);
+  const [showNovaSenha, setShowNovaSenha] = useState(false);
+  const [showConfirmar, setShowConfirmar] = useState(false);
+
+  const senhaMinLength = novaSenha.length >= 8;
+  const senhaTemMaiuscula = /[A-Z]/.test(novaSenha);
+  const senhaTemNumero = /[0-9]/.test(novaSenha);
+  const senhaTemEspecial = /[^A-Za-z0-9]/.test(novaSenha);
+  const senhasConferem = novaSenha === confirmarSenha && confirmarSenha.length > 0;
+  const senhaValida = senhaMinLength && senhaTemMaiuscula && senhaTemNumero && senhaTemEspecial && senhasConferem && senhaAtual.length > 0;
+
+  const handleTrocarSenha = () => {
+    if (!senhaValida) return;
+    toast.success("Senha alterada com sucesso!");
+    setSenhaAtual("");
+    setNovaSenha("");
+    setConfirmarSenha("");
+  };
+
+  const PasswordRule = ({ ok, text }: { ok: boolean; text: string }) => (
+    <div className={`flex items-center gap-2 text-xs ${ok ? "text-emerald-600" : "text-muted-foreground"}`}>
+      {ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+      {text}
+    </div>
+  );
 
   useEffect(() => {
     if (darkMode) {
@@ -76,6 +107,94 @@ const Perfil = () => {
                 <Save className="h-4 w-4" /> Salvar Alterações
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Trocar Senha */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lock className="h-4 w-4 text-primary" />
+              Trocar Senha
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label>Senha atual</Label>
+                <div className="relative">
+                  <Input
+                    type={showSenhaAtual ? "text" : "password"}
+                    value={senhaAtual}
+                    onChange={(e) => setSenhaAtual(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSenhaAtual(!showSenhaAtual)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showSenhaAtual ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nova senha</Label>
+                <div className="relative">
+                  <Input
+                    type={showNovaSenha ? "text" : "password"}
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNovaSenha(!showNovaSenha)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNovaSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Confirmar nova senha</Label>
+                <div className="relative">
+                  <Input
+                    type={showConfirmar ? "text" : "password"}
+                    value={confirmarSenha}
+                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmar(!showConfirmar)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {novaSenha.length > 0 && (
+              <div className="rounded-lg border border-border p-4 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos da senha:</p>
+                <PasswordRule ok={senhaMinLength} text="Mínimo de 8 caracteres" />
+                <PasswordRule ok={senhaTemMaiuscula} text="Pelo menos uma letra maiúscula" />
+                <PasswordRule ok={senhaTemNumero} text="Pelo menos um número" />
+                <PasswordRule ok={senhaTemEspecial} text="Pelo menos um caractere especial (!@#$...)" />
+                <Separator className="my-2" />
+                <PasswordRule ok={senhasConferem} text="As senhas conferem" />
+              </div>
+            )}
+
+            <Button
+              className="gap-2"
+              disabled={!senhaValida}
+              onClick={handleTrocarSenha}
+            >
+              <Lock className="h-4 w-4" /> Alterar Senha
+            </Button>
           </CardContent>
         </Card>
 
