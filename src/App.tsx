@@ -15,6 +15,11 @@ import Financeiro from "./pages/Financeiro";
 import Configuracoes from "./pages/Configuracoes";
 import Usuarios from "./pages/Usuarios";
 import Perfil from "./pages/Perfil";
+import Notificacoes from "./pages/Notificacoes";
+import Ajuda from "./pages/Ajuda";
+import Logistica from "./pages/Logistica";
+import Documentos from "./pages/Documentos";
+import BiAvancado from "./pages/BiAvancado";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,7 +42,12 @@ const App = () => (
             <Route path="calculadora" element={<Calculadora />} />
             <Route path="agenda" element={<Agenda />} />
             <Route path="financeiro" element={<Financeiro />} />
+            <Route path="logistica" element={<Logistica />} />
+            <Route path="documentos" element={<Documentos />} />
+            <Route path="bi" element={<BiAvancado />} />
+            <Route path="notificacoes" element={<Notificacoes />} />
             <Route path="perfil" element={<Perfil />} />
+            <Route path="ajuda" element={<Ajuda />} />
             <Route path="configuracoes" element={<Configuracoes />} />
           </Route>
           <Route path="*" element={<NotFound />} />
