@@ -31,7 +31,7 @@ const AppSidebar = () => {
   const navigate = useNavigate();
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+    <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5 border-b border-sidebar-border">
         <Volume2 className="h-7 w-7 text-sidebar-primary" />
