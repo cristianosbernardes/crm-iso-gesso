@@ -10,6 +10,11 @@ import {
   Volume2,
   UsersRound,
   UserCircle,
+  Bell,
+  HelpCircle,
+  Truck,
+  FileText,
+  Brain,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -22,7 +27,12 @@ const navItems = [
   { title: "Calculadora", url: "/dashboard/calculadora", icon: Calculator },
   { title: "Agenda", url: "/dashboard/agenda", icon: Calendar },
   { title: "Financeiro", url: "/dashboard/financeiro", icon: BarChart3 },
+  { title: "Logística", url: "/dashboard/logistica", icon: Truck },
+  { title: "Documentos", url: "/dashboard/documentos", icon: FileText },
+  { title: "BI Avançado", url: "/dashboard/bi", icon: Brain },
+  { title: "Notificações", url: "/dashboard/notificacoes", icon: Bell },
   { title: "Perfil", url: "/dashboard/perfil", icon: UserCircle },
+  { title: "Ajuda", url: "/dashboard/ajuda", icon: HelpCircle },
   { title: "Configurações", url: "/dashboard/configuracoes", icon: Settings },
 ];
 
