@@ -9,8 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp, TrendingDown, DollarSign, Receipt, ArrowUpRight, ArrowDownRight,
   Package, QrCode, MapPin, Filter, Download, CalendarDays, BarChart3, PieChart as PieChartIcon,
-  Wallet, CreditCard, FileText, Eye
+  Wallet, CreditCard, FileText, Eye, Trophy, Users, Target, Percent, Medal, Star, ChevronRight, ArrowLeft, ShoppingCart
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, Legend
@@ -79,13 +80,74 @@ const orcamentos = [
   { id: "ORC-2024-085", cliente: "Condomínio Parque", valor: 19200, data: "18/02/2026", validade: "04/03/2026", status: "recusado" },
 ];
 
-const tooltipStyle = {
-  backgroundColor: "hsl(220, 25%, 12%)",
-  border: "1px solid hsl(220, 20%, 20%)",
-  borderRadius: "8px",
-  color: "hsl(220, 10%, 92%)",
-  fontSize: "12px",
-};
+interface Vendedor {
+  id: number;
+  nome: string;
+  iniciais: string;
+  cargo: string;
+  vendasTotal: number;
+  qtdVendas: number;
+  ticketMedio: number;
+  comissaoPct: number;
+  comissaoAcumulada: number;
+  orcamentosGerados: number;
+  orcamentosFechados: number;
+  taxaConversao: number;
+  meta: number;
+  evolucao: { mes: string; vendas: number }[];
+}
+
+const vendedores: Vendedor[] = [
+  {
+    id: 1, nome: "João Administrador", iniciais: "JA", cargo: "Gerente Comercial",
+    vendasTotal: 285000, qtdVendas: 42, ticketMedio: 6786, comissaoPct: 5,
+    comissaoAcumulada: 14250, orcamentosGerados: 68, orcamentosFechados: 42, taxaConversao: 61.8, meta: 300000,
+    evolucao: [
+      { mes: "Set", vendas: 38000 }, { mes: "Out", vendas: 45000 }, { mes: "Nov", vendas: 52000 },
+      { mes: "Dez", vendas: 58000 }, { mes: "Jan", vendas: 42000 }, { mes: "Fev", vendas: 50000 },
+    ],
+  },
+  {
+    id: 2, nome: "Ana Vendedora", iniciais: "AV", cargo: "Consultora Técnica",
+    vendasTotal: 198000, qtdVendas: 35, ticketMedio: 5657, comissaoPct: 4,
+    comissaoAcumulada: 7920, orcamentosGerados: 52, orcamentosFechados: 35, taxaConversao: 67.3, meta: 220000,
+    evolucao: [
+      { mes: "Set", vendas: 28000 }, { mes: "Out", vendas: 32000 }, { mes: "Nov", vendas: 35000 },
+      { mes: "Dez", vendas: 38000 }, { mes: "Jan", vendas: 30000 }, { mes: "Fev", vendas: 35000 },
+    ],
+  },
+  {
+    id: 3, nome: "Carlos Vendedor", iniciais: "CV", cargo: "Vendedor Externo",
+    vendasTotal: 156000, qtdVendas: 28, ticketMedio: 5571, comissaoPct: 4,
+    comissaoAcumulada: 6240, orcamentosGerados: 45, orcamentosFechados: 28, taxaConversao: 62.2, meta: 180000,
+    evolucao: [
+      { mes: "Set", vendas: 22000 }, { mes: "Out", vendas: 25000 }, { mes: "Nov", vendas: 28000 },
+      { mes: "Dez", vendas: 30000 }, { mes: "Jan", vendas: 24000 }, { mes: "Fev", vendas: 27000 },
+    ],
+  },
+  {
+    id: 4, nome: "Mariana Sales", iniciais: "MS", cargo: "Vendedora Interna",
+    vendasTotal: 112000, qtdVendas: 22, ticketMedio: 5091, comissaoPct: 3.5,
+    comissaoAcumulada: 3920, orcamentosGerados: 38, orcamentosFechados: 22, taxaConversao: 57.9, meta: 150000,
+    evolucao: [
+      { mes: "Set", vendas: 15000 }, { mes: "Out", vendas: 18000 }, { mes: "Nov", vendas: 20000 },
+      { mes: "Dez", vendas: 22000 }, { mes: "Jan", vendas: 17000 }, { mes: "Fev", vendas: 20000 },
+    ],
+  },
+  {
+    id: 5, nome: "Pedro Técnico", iniciais: "PT", cargo: "Técnico Comercial",
+    vendasTotal: 83500, qtdVendas: 15, ticketMedio: 5567, comissaoPct: 3,
+    comissaoAcumulada: 2505, orcamentosGerados: 30, orcamentosFechados: 15, taxaConversao: 50.0, meta: 120000,
+    evolucao: [
+      { mes: "Set", vendas: 10000 }, { mes: "Out", vendas: 12000 }, { mes: "Nov", vendas: 15000 },
+      { mes: "Dez", vendas: 18000 }, { mes: "Jan", vendas: 13000 }, { mes: "Fev", vendas: 15500 },
+    ],
+  },
+];
+
+const faturamentoTotal = vendedores.reduce((s, v) => s + v.vendasTotal, 0);
+
+const medalhas = ["🥇", "🥈", "🥉"];
 
 const statusColor: Record<string, string> = {
   pago: "bg-emerald-500/15 text-emerald-600 border-emerald-500/20",
@@ -94,6 +156,14 @@ const statusColor: Record<string, string> = {
   visualizado: "bg-purple-500/15 text-purple-600 border-purple-500/20",
   aprovado: "bg-emerald-500/15 text-emerald-600 border-emerald-500/20",
   recusado: "bg-red-500/15 text-red-600 border-red-500/20",
+};
+
+const tooltipStyle = {
+  backgroundColor: "hsl(220, 25%, 12%)",
+  border: "1px solid hsl(220, 20%, 20%)",
+  borderRadius: "8px",
+  color: "hsl(220, 10%, 92%)",
+  fontSize: "12px",
 };
 
 // ── Helpers ──
@@ -125,6 +195,7 @@ const KPICard = ({ label, value, icon: Icon, color, trend, trendValue }: {
 const Financeiro = () => {
   const [periodo, setPeriodo] = useState("12m");
   const [filtroTransacao, setFiltroTransacao] = useState("todas");
+  const [vendedorDetalhe, setVendedorDetalhe] = useState<Vendedor | null>(null);
 
   const transacoesFiltradas = transacoes.filter(t =>
     filtroTransacao === "todas" || t.tipo === filtroTransacao
@@ -188,6 +259,9 @@ const Financeiro = () => {
           </TabsTrigger>
           <TabsTrigger value="qrcode" className="gap-1.5 text-xs">
             <QrCode className="h-4 w-4" /> QR Code Analytics
+          </TabsTrigger>
+          <TabsTrigger value="vendedores" className="gap-1.5 text-xs">
+            <Trophy className="h-4 w-4" /> Performance de Vendas
           </TabsTrigger>
         </TabsList>
 
@@ -487,6 +561,231 @@ const Financeiro = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* ── PERFORMANCE DE VENDAS ── */}
+        <TabsContent value="vendedores" className="space-y-6">
+          {vendedorDetalhe ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+              {/* Detalhe individual */}
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => setVendedorDetalhe(null)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <Avatar className="h-14 w-14">
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">{vendedorDetalhe.iniciais}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">{vendedorDetalhe.nome}</h2>
+                  <p className="text-sm text-muted-foreground">{vendedorDetalhe.cargo}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <KPICard label="Total Vendido" value={`R$ ${(vendedorDetalhe.vendasTotal / 1000).toFixed(0)}k`} icon={DollarSign} color="bg-primary/10 text-primary" />
+                <KPICard label="Comissão Acumulada" value={`R$ ${vendedorDetalhe.comissaoAcumulada.toLocaleString("pt-BR")}`} icon={Wallet} color="bg-emerald-500/10 text-emerald-600" />
+                <KPICard label="Taxa de Conversão" value={`${vendedorDetalhe.taxaConversao}%`} icon={Target} color="bg-blue-500/10 text-blue-600" />
+                <KPICard label="Atingimento da Meta" value={`${((vendedorDetalhe.vendasTotal / vendedorDetalhe.meta) * 100).toFixed(0)}%`} icon={Trophy} color="bg-amber-500/10 text-amber-600" />
+              </div>
+
+              {/* Evolução individual */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Evolução de Vendas — {vendedorDetalhe.nome}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={vendedorDetalhe.evolucao}>
+                        <defs>
+                          <linearGradient id="vendedorGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(25, 95%, 53%)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="hsl(25, 95%, 53%)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="mes" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
+                        <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={(v) => `${v / 1000}k`} />
+                        <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `R$ ${v.toLocaleString("pt-BR")}`} />
+                        <Area type="monotone" dataKey="vendas" stroke="hsl(25, 95%, 53%)" fill="url(#vendedorGrad)" strokeWidth={2} name="Vendas" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Funil de conversão */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Funil de Conversão</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Orçamentos Gerados</span>
+                        <span className="font-semibold text-foreground">{vendedorDetalhe.orcamentosGerados}</span>
+                      </div>
+                      <Progress value={100} className="h-3" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Vendas Fechadas</span>
+                        <span className="font-semibold text-foreground">{vendedorDetalhe.orcamentosFechados}</span>
+                      </div>
+                      <Progress value={vendedorDetalhe.taxaConversao} className="h-3" />
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Taxa de conversão: <span className="font-bold text-foreground">{vendedorDetalhe.taxaConversao}%</span>
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Meta vs Realizado</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-center py-4">
+                      <p className="text-4xl font-bold font-mono text-primary">
+                        {((vendedorDetalhe.vendasTotal / vendedorDetalhe.meta) * 100).toFixed(0)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">da meta atingida</p>
+                    </div>
+                    <Progress value={Math.min((vendedorDetalhe.vendasTotal / vendedorDetalhe.meta) * 100, 100)} className="h-3" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>R$ {(vendedorDetalhe.vendasTotal / 1000).toFixed(0)}k vendido</span>
+                      <span>Meta: R$ {(vendedorDetalhe.meta / 1000).toFixed(0)}k</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="border-muted bg-muted/20">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <Star className="h-5 w-5 text-warning mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Integração Telegram (Bot)</p>
+                    <p className="text-xs text-muted-foreground">Relatório semanal automático enviado aos administradores com destaque do vendedor da semana. Requer Lovable Cloud + n8n para ativação.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : (
+            <>
+              {/* KPIs de equipe */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <KPICard label="Faturamento da Equipe" value={`R$ ${(faturamentoTotal / 1000).toFixed(0)}k`} icon={DollarSign} color="bg-primary/10 text-primary" trend="up" trendValue="+22%" />
+                <KPICard label="Total de Vendas" value={`${vendedores.reduce((s, v) => s + v.qtdVendas, 0)}`} icon={ShoppingCart} color="bg-emerald-500/10 text-emerald-600" />
+                <KPICard label="Comissões Pagas" value={`R$ ${(vendedores.reduce((s, v) => s + v.comissaoAcumulada, 0) / 1000).toFixed(1)}k`} icon={Wallet} color="bg-amber-500/10 text-amber-600" />
+                <KPICard label="Conversão Média" value={`${(vendedores.reduce((s, v) => s + v.taxaConversao, 0) / vendedores.length).toFixed(1)}%`} icon={Target} color="bg-blue-500/10 text-blue-600" />
+              </div>
+
+              {/* Ranking */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-primary" />
+                    Ranking de Vendedores
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {vendedores.map((v, i) => {
+                    const share = ((v.vendasTotal / faturamentoTotal) * 100).toFixed(1);
+                    return (
+                      <motion.div
+                        key={v.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
+                        onClick={() => setVendedorDetalhe(v)}
+                      >
+                        {/* Posição */}
+                        <div className="w-10 text-center">
+                          {i < 3 ? (
+                            <span className="text-2xl">{medalhas[i]}</span>
+                          ) : (
+                            <span className="text-lg font-bold text-muted-foreground">{i + 1}º</span>
+                          )}
+                        </div>
+
+                        {/* Avatar + Info */}
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className={`font-semibold text-sm ${i === 0 ? "bg-amber-500/15 text-amber-600" : i === 1 ? "bg-slate-400/15 text-slate-500" : i === 2 ? "bg-orange-600/15 text-orange-700" : "bg-muted text-muted-foreground"}`}>
+                            {v.iniciais}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-foreground">{v.nome}</p>
+                            <span className="text-xs text-muted-foreground hidden sm:inline">{v.cargo}</span>
+                          </div>
+                          <div className="flex items-center gap-4 mt-1">
+                            <Progress value={parseFloat(share)} className="h-2 flex-1 max-w-[200px]" />
+                            <span className="text-xs font-mono text-muted-foreground">{share}% share</span>
+                          </div>
+                        </div>
+
+                        {/* Métricas */}
+                        <div className="hidden md:flex items-center gap-6 text-right">
+                          <div>
+                            <p className="text-sm font-bold font-mono text-foreground">R$ {(v.vendasTotal / 1000).toFixed(0)}k</p>
+                            <p className="text-[10px] text-muted-foreground">Faturado</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold font-mono text-foreground">{v.qtdVendas}</p>
+                            <p className="text-[10px] text-muted-foreground">Vendas</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold font-mono text-foreground">R$ {v.ticketMedio.toLocaleString("pt-BR")}</p>
+                            <p className="text-[10px] text-muted-foreground">Ticket Médio</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold font-mono text-foreground">{v.taxaConversao}%</p>
+                            <p className="text-[10px] text-muted-foreground">Conversão</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold font-mono text-emerald-600">R$ {v.comissaoAcumulada.toLocaleString("pt-BR")}</p>
+                            <p className="text-[10px] text-muted-foreground">Comissão ({v.comissaoPct}%)</p>
+                          </div>
+                        </div>
+
+                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </motion.div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+
+              {/* Gráfico comparativo */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Comparativo de Faturamento por Vendedor
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={vendedores.map(v => ({ nome: v.nome.split(" ")[0], vendas: v.vendasTotal, meta: v.meta }))}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="nome" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />
+                        <YAxis tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} tickFormatter={(v) => `${v / 1000}k`} />
+                        <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `R$ ${v.toLocaleString("pt-BR")}`} />
+                        <Legend />
+                        <Bar dataKey="vendas" fill="hsl(25, 95%, 53%)" radius={[4, 4, 0, 0]} name="Realizado" />
+                        <Bar dataKey="meta" fill="hsl(200, 70%, 50%)" radius={[4, 4, 0, 0]} name="Meta" opacity={0.4} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
       </Tabs>
     </div>
