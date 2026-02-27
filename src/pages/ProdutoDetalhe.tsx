@@ -18,7 +18,8 @@ import {
   AlertTriangle, TrendingUp, ShieldCheck, Flame, Droplets, Thermometer, Volume2,
   Calculator, ClipboardList, BarChart3, History, FileText, Link2, PackagePlus,
   ArrowUpDown, StickyNote, GitCompare, Download, Plus, Minus, Calendar,
-  DollarSign, ArrowUp, ArrowDown, Clock, User, FileBadge, FileCheck
+  DollarSign, ArrowUp, ArrowDown, Clock, User, FileBadge, FileCheck,
+  MapPin, Palette, BoxSelect, Image, BookOpen
 } from "lucide-react";
 import { findProdutoById, produtos, categoriaColor, type La, type Perfil, type Parafuso, type Placa, type Acessorio, type Produto } from "@/data/produtos";
 import { toast } from "sonner";
@@ -1029,12 +1030,71 @@ const ProdutoDetalhe = () => {
 
       <Separator />
 
+      {/* Destaques Técnicos — Consulta rápida para técnico em obra */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Volume2 className="h-4 w-4 text-primary" />
+            Destaques Técnicos — Consulta Rápida
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* NRC — só para Lãs e Placas */}
+            {"nrc" in produto && (
+              <div className="rounded-lg bg-background p-3 text-center border">
+                <p className="text-xs text-muted-foreground">NRC</p>
+                <p className="text-2xl font-bold font-mono text-primary">{(produto as any).nrc}</p>
+              </div>
+            )}
+            {/* Classificação de Fogo */}
+            {produto.classificacaoFogo && (
+              <div className="rounded-lg bg-background p-3 text-center border">
+                <Flame className="h-4 w-4 mx-auto mb-1 text-destructive" />
+                <p className="text-xs text-muted-foreground">Fogo</p>
+                <p className="text-sm font-semibold text-foreground">{produto.classificacaoFogo.split("(")[0].trim()}</p>
+              </div>
+            )}
+            {/* Qtd por Embalagem */}
+            {produto.qtdEmbalagem && (
+              <div className="rounded-lg bg-background p-3 text-center border">
+                <p className="text-xs text-muted-foreground">Embalagem</p>
+                <p className="text-lg font-bold text-foreground">{produto.qtdEmbalagem}</p>
+                <p className="text-[10px] text-muted-foreground">{produto.unidadeEmbalagem}</p>
+              </div>
+            )}
+            {/* Peso */}
+            {produto.pesoEmbalagem && (
+              <div className="rounded-lg bg-background p-3 text-center border">
+                <p className="text-xs text-muted-foreground">Peso Emb.</p>
+                <p className="text-lg font-bold text-foreground">{produto.pesoEmbalagem}</p>
+              </div>
+            )}
+          </div>
+          {/* Locais de instalação */}
+          {produto.locaisInstalacao && produto.locaisInstalacao.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+              {produto.locaisInstalacao.map(l => (
+                <Badge key={l} variant="secondary" className="text-[10px]">{l}</Badge>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Separator />
+
       {/* Abas com todos os módulos */}
       <Tabs defaultValue="ficha" className="w-full">
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="ficha" className="gap-1.5 text-xs">
-            {categoriaIcon[produto.categoria] ? <Package className="h-3.5 w-3.5" /> : null}
+            <Package className="h-3.5 w-3.5" />
             Ficha Técnica
+          </TabsTrigger>
+          <TabsTrigger value="cadastro" className="gap-1.5 text-xs">
+            <BookOpen className="h-3.5 w-3.5" />
+            Cadastro Enterprise
           </TabsTrigger>
           <TabsTrigger value="movimentacoes" className="gap-1.5 text-xs">
             <ArrowUpDown className="h-3.5 w-3.5" />
@@ -1072,6 +1132,177 @@ const ProdutoDetalhe = () => {
             Ficha Técnica — {produto.categoria}
           </h2>
           {renderSection(produto)}
+        </TabsContent>
+
+        {/* ── Cadastro Enterprise ── */}
+        <TabsContent value="cadastro" className="mt-6">
+          <div className="space-y-6">
+            {/* 1. Identificação e Visual */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Image className="h-4 w-4 text-primary" />
+                  Identificação e Visual
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Nome Material</p>
+                    <p className="text-sm font-semibold text-foreground">{produto.nome}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">SKU</p>
+                    <p className="text-sm font-mono text-foreground">{produto.sku}</p>
+                  </div>
+                </div>
+                {produto.especificacao && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Especificação Material</p>
+                    <p className="text-sm text-foreground">{produto.especificacao}</p>
+                  </div>
+                )}
+                {produto.cores && produto.cores.length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Palette className="h-3 w-3" /> Cores Disponíveis</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {produto.cores.map(c => <Badge key={c} variant="outline" className="text-xs">{c}</Badge>)}
+                    </div>
+                  </div>
+                )}
+                <div className="p-3 rounded-lg bg-muted/30 flex items-center gap-3">
+                  <Image className="h-8 w-8 text-muted-foreground opacity-30" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Galeria de Fotos</p>
+                    <p className="text-xs text-muted-foreground">Upload de múltiplas imagens requer Lovable Cloud (Storage)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 2. Performance Técnica — oculto para Parafusos e Acessórios sem NRC */}
+            {"nrc" in produto && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Volume2 className="h-4 w-4 text-primary" />
+                    Performance Técnica
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="rounded-lg bg-muted/50 p-4 text-center">
+                      <p className="text-xs text-muted-foreground">NRC</p>
+                      <p className="text-3xl font-bold font-mono text-primary">{(produto as any).nrc}</p>
+                      <p className="text-[10px] text-muted-foreground">Noise Reduction Coefficient</p>
+                    </div>
+                    {produto.classificacaoFogo && (
+                      <div className="rounded-lg bg-muted/50 p-4 text-center">
+                        <Flame className="h-5 w-5 mx-auto mb-1 text-destructive" />
+                        <p className="text-sm font-semibold text-foreground">{produto.classificacaoFogo}</p>
+                        <p className="text-[10px] text-muted-foreground">Classificação quanto ao Fogo</p>
+                      </div>
+                    )}
+                    {"alpha" in produto && (
+                      <div className="rounded-lg bg-muted/50 p-4 text-center">
+                        <BarChart3 className="h-5 w-5 mx-auto mb-1 text-chart-4" />
+                        <p className="text-sm font-semibold text-foreground">6 bandas</p>
+                        <p className="text-[10px] text-muted-foreground">Curva de Desempenho (125Hz–4kHz)</p>
+                      </div>
+                    )}
+                  </div>
+                  {"alpha" in produto && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Curva de Absorção por Frequência</p>
+                      {Object.entries((produto as La).alpha).map(([freq, val]) => (
+                        <div key={freq} className="flex items-center gap-3">
+                          <span className="text-xs font-mono text-muted-foreground w-12">{freq}</span>
+                          <Progress value={val * 100} className="h-2.5 flex-1" />
+                          <span className="text-xs font-mono font-semibold text-foreground w-10 text-right">{val.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 3. Variantes e Dimensões */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BoxSelect className="h-4 w-4 text-primary" />
+                  Variantes, Dimensões e Logística
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {produto.dimensoes?.comprimento && (
+                    <div className="rounded-lg bg-muted/50 p-3">
+                      <p className="text-xs text-muted-foreground">Comprimento</p>
+                      <p className="text-sm font-semibold text-foreground">{produto.dimensoes.comprimento}</p>
+                    </div>
+                  )}
+                  {produto.dimensoes?.largura && (
+                    <div className="rounded-lg bg-muted/50 p-3">
+                      <p className="text-xs text-muted-foreground">Largura</p>
+                      <p className="text-sm font-semibold text-foreground">{produto.dimensoes.largura}</p>
+                    </div>
+                  )}
+                  {produto.dimensoes?.espessura && (
+                    <div className="rounded-lg bg-muted/50 p-3">
+                      <p className="text-xs text-muted-foreground">Espessura</p>
+                      <p className="text-sm font-semibold text-foreground">{produto.dimensoes.espessura}</p>
+                    </div>
+                  )}
+                  {produto.qtdEmbalagem && (
+                    <div className="rounded-lg bg-muted/50 p-3">
+                      <p className="text-xs text-muted-foreground">Qtde/Embalagem</p>
+                      <p className="text-sm font-semibold text-foreground">{produto.qtdEmbalagem} {produto.unidadeEmbalagem}</p>
+                    </div>
+                  )}
+                  {produto.pesoEmbalagem && (
+                    <div className="rounded-lg bg-muted/50 p-3">
+                      <p className="text-xs text-muted-foreground">Peso Embalagem</p>
+                      <p className="text-sm font-semibold text-foreground">{produto.pesoEmbalagem}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 4. Aplicação e Guia do Instalador */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-primary" />
+                  Aplicação e Guia do Instalador
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {produto.locaisInstalacao && produto.locaisInstalacao.length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Locais de Instalação Recomendados</p>
+                    <div className="flex flex-wrap gap-2">
+                      {produto.locaisInstalacao.map(l => (
+                        <div key={l} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium">
+                          <MapPin className="h-3 w-3" /> {l}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {produto.formaInstalacao && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Forma de Instalação</p>
+                    <div className="p-4 rounded-lg bg-muted/30 border-l-4 border-primary/30">
+                      <p className="text-sm text-foreground leading-relaxed">{produto.formaInstalacao}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="movimentacoes" className="mt-6">
