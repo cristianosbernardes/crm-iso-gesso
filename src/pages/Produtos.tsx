@@ -113,18 +113,20 @@ const Produtos = () => {
                         R$ {p.preco.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/produtos/${p.id}`); }}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
-                            <QrCode className="h-4 w-4" />
-                          </Button>
+                        <div className="flex justify-end gap-1">
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/produtos/${p.id}`); }}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                              <QrCode className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-100 group-hover:opacity-0 transition-opacity" />
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground inline-block group-hover:hidden" />
                       </TableCell>
                     </motion.tr>
                   ))}
