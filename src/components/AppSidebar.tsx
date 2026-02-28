@@ -1,92 +1,157 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Package,
-  Users,
-  Calculator,
-  Calendar,
-  BarChart3,
-  Settings,
-  LogOut,
-  Volume2,
-  UsersRound,
-  UserCircle,
-  Bell,
-  HelpCircle,
-  Truck,
-  FileText,
-  Brain,
-} from "lucide-react";
-import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+  LayoutDashboard, Users, MonitorSmartphone, FileBarChart, Brain,
+  ListTodo, Bell, UsersRound, Palette, Plug, CreditCard,
+  PanelLeft, ChevronLeft, Zap, LogOut, BarChart3,
+  CheckSquare,
+} from 'lucide-react';
+import { NavLink } from '@/components/NavLink';
+import { useAuthStore } from '@/stores/authStore';
+import { useTenantStore } from '@/stores/tenantStore';
+import { useUIStore } from '@/stores/uiStore';
+import { cn } from '@/lib/utils';
 
-const navItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Produtos", url: "/dashboard/produtos", icon: Package },
-  { title: "Clientes", url: "/dashboard/clientes", icon: Users },
-  { title: "Usuários", url: "/dashboard/usuarios", icon: UsersRound },
-  { title: "Calculadora", url: "/dashboard/calculadora", icon: Calculator },
-  { title: "Agenda", url: "/dashboard/agenda", icon: Calendar },
-  { title: "Financeiro", url: "/dashboard/financeiro", icon: BarChart3 },
-  { title: "Logística", url: "/dashboard/logistica", icon: Truck },
-  { title: "Documentos", url: "/dashboard/documentos", icon: FileText },
-  { title: "BI Avançado", url: "/dashboard/bi", icon: Brain },
-  { title: "Notificações", url: "/dashboard/notificacoes", icon: Bell },
-  { title: "Perfil", url: "/dashboard/perfil", icon: UserCircle },
-  { title: "Ajuda", url: "/dashboard/ajuda", icon: HelpCircle },
-  { title: "Configurações", url: "/dashboard/configuracoes", icon: Settings },
+interface NavItem {
+  title: string;
+  url: string;
+  icon: any;
+  roles: string[];
+  agencyOnly?: boolean;
+}
+
+const coreNav: NavItem[] = [
+  { title: 'Dashboard', url: '/app', icon: LayoutDashboard, roles: ['OWNER', 'HEAD', 'MEMBER'] },
+  { title: 'Clientes', url: '/app/clientes', icon: Users, roles: ['OWNER', 'HEAD', 'MEMBER'] },
+  { title: 'Contas de Anúncios', url: '/app/ad-accounts', icon: MonitorSmartphone, roles: ['OWNER', 'HEAD', 'MEMBER'] },
+  { title: 'Relatórios', url: '/app/relatorios', icon: FileBarChart, roles: ['OWNER', 'HEAD', 'MEMBER'] },
+  { title: 'IA & Insights', url: '/app/ia', icon: Brain, roles: ['OWNER', 'HEAD', 'MEMBER'] },
+  { title: 'Tarefas', url: '/app/tarefas', icon: ListTodo, roles: ['OWNER', 'HEAD', 'MEMBER'] },
+  { title: 'Alertas', url: '/app/alertas', icon: Bell, roles: ['OWNER', 'HEAD', 'MEMBER'] },
+  { title: 'Squad & Time', url: '/app/squads', icon: UsersRound, roles: ['OWNER', 'HEAD'], agencyOnly: true },
+];
+
+const agencyNav: NavItem[] = [
+  { title: 'White Label', url: '/app/whitelabel', icon: Palette, roles: ['OWNER'] },
+  { title: 'Integrações', url: '/app/integracoes', icon: Plug, roles: ['OWNER'] },
+  { title: 'Billing', url: '/app/billing', icon: CreditCard, roles: ['OWNER'] },
+];
+
+const clientNav: NavItem[] = [
+  { title: 'Meu Painel', url: '/app/portal', icon: BarChart3, roles: ['CLIENT'] },
+  { title: 'Relatórios', url: '/app/portal/relatorios', icon: FileBarChart, roles: ['CLIENT'] },
+  { title: 'Aprovações', url: '/app/portal/aprovacoes', icon: CheckSquare, roles: ['CLIENT'] },
 ];
 
 const AppSidebar = () => {
-  const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuthStore();
+  const { currentTenant, currentRole, clearTenant } = useTenantStore();
+  const { sidebarCollapsed, toggleSidebar } = useUIStore();
+
+  const isAgency = currentTenant?.type === 'AGENCY';
+  const isClient = currentRole === 'CLIENT';
+
+  const filterByRole = (items: NavItem[]) =>
+    items.filter((item) => {
+      if (!currentRole) return false;
+      if (item.agencyOnly && !isAgency) return false;
+      return item.roles.includes(currentRole);
+    });
+
+  const visibleCore = isClient ? [] : filterByRole(coreNav);
+  const visibleAgency = isClient ? [] : (isAgency ? filterByRole(agencyNav) : []);
+  const visibleClient = isClient ? filterByRole(clientNav) : [];
+
+  const handleLogout = () => {
+    logout();
+    clearTenant();
+    navigate('/');
+  };
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+    <aside
+      className={cn(
+        'sticky top-0 flex h-screen shrink-0 flex-col border-r transition-all duration-300',
+        'bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))] border-[hsl(var(--sidebar-border))]',
+        sidebarCollapsed ? 'w-16' : 'w-60'
+      )}
+    >
       {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-5 border-b border-sidebar-border">
-        <Volume2 className="h-7 w-7 text-sidebar-primary" />
-        <span className="text-xl font-bold tracking-tight">
-          ISO<span className="text-sidebar-primary">-GESSO</span>
-        </span>
+      <div className="flex items-center justify-between border-b border-[hsl(var(--sidebar-border))] px-4 py-4">
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <Zap className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="text-lg font-bold tracking-tight text-gradient">Uniafy</span>
+          </div>
+        )}
+        <button
+          onClick={toggleSidebar}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-[hsl(var(--sidebar-accent))] hover:text-foreground transition-colors"
+        >
+          {sidebarCollapsed ? <PanelLeft className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.url || 
-            (item.url !== "/dashboard" && location.pathname.startsWith(item.url));
-
-          return (
-            <NavLink
-              key={item.url}
-              to={item.url}
-              end={item.url === "/dashboard"}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              }`}
-              activeClassName="bg-sidebar-accent text-sidebar-primary"
-            >
-              <item.icon className="h-4.5 w-4.5" />
-              <span>{item.title}</span>
-            </NavLink>
-          );
-        })}
+      <nav className="flex-1 space-y-6 overflow-y-auto px-2 py-4">
+        {visibleCore.length > 0 && (
+          <NavSection label="CORE" items={visibleCore} collapsed={sidebarCollapsed} />
+        )}
+        {visibleAgency.length > 0 && (
+          <NavSection label="AGENCY" items={visibleAgency} collapsed={sidebarCollapsed} />
+        )}
+        {visibleClient.length > 0 && (
+          <NavSection label="PORTAL" items={visibleClient} collapsed={sidebarCollapsed} />
+        )}
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-[hsl(var(--sidebar-border))] p-2">
         <button
-          onClick={() => navigate("/")}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+          onClick={handleLogout}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
+            'text-muted-foreground hover:bg-[hsl(var(--sidebar-accent))] hover:text-foreground transition-colors',
+            sidebarCollapsed && 'justify-center px-0'
+          )}
         >
-          <LogOut className="h-4.5 w-4.5" />
-          <span>Sair</span>
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!sidebarCollapsed && <span>Sair</span>}
         </button>
       </div>
     </aside>
   );
 };
+
+const NavSection = ({ label, items, collapsed }: { label: string; items: NavItem[]; collapsed: boolean }) => (
+  <div>
+    {!collapsed && (
+      <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+        {label}
+      </p>
+    )}
+    <div className="space-y-0.5">
+      {items.map((item) => (
+        <NavLink
+          key={item.url}
+          to={item.url}
+          end={item.url === '/app'}
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            'text-[hsl(var(--sidebar-foreground))]/70 hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-foreground))]',
+            collapsed && 'justify-center px-0'
+          )}
+          activeClassName="bg-[hsl(var(--sidebar-accent))] text-primary"
+        >
+          <item.icon className="h-[18px] w-[18px] shrink-0" />
+          {!collapsed && <span>{item.title}</span>}
+        </NavLink>
+      ))}
+    </div>
+  </div>
+);
 
 export default AppSidebar;
