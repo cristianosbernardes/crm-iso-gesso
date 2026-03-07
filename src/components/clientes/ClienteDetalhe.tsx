@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft, Building2, Mail, Phone, Send, MapPin,
-  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2, Trash2,
+  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2, Trash2, History,
 } from "lucide-react";
 import { type ClienteComRelacoes } from "@/hooks/useClientes";
 import { useClientes } from "@/hooks/useClientes";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface Props {
@@ -64,7 +65,7 @@ const maskCEP = (v: string) => {
 };
 
 const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
-  const { updateCliente, createObra, createEndereco, deleteCliente } = useClientes();
+  const { updateCliente, createObra, createEndereco, deleteCliente, logHistorico } = useClientes();
   const [editing, setEditing] = useState(false);
   const [obraDialogOpen, setObraDialogOpen] = useState(false);
   const [endDialogOpen, setEndDialogOpen] = useState(false);
@@ -144,6 +145,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
       observacoes: editForm.observacoes || null,
       aniversario: editForm.aniversario || null,
     });
+    await logHistorico(c.id, "edicao", `Dados do cliente "${c.nome}" foram atualizados`);
     setEditing(false);
   };
 
@@ -155,6 +157,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
   const handleAddObra = async () => {
     if (!novaObra.nome) return;
     await createObra.mutateAsync({ cliente_id: c.id, ...novaObra });
+    await logHistorico(c.id, "obra_adicionada", `Obra "${novaObra.nome}" adicionada`);
     setNovaObra({ nome: "", endereco: "", status: "ativa" });
     setObraDialogOpen(false);
   };
@@ -171,6 +174,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
       estado: novoEnd.estado || undefined,
       cep: novoEnd.cep || undefined,
     });
+    await logHistorico(c.id, "endereco_adicionado", `Endereço "${novoEnd.logradouro}" adicionado`);
     setNovoEnd({ tipo: "entrega", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "", complemento: "" });
     setCepError("");
     setEndDialogOpen(false);
@@ -208,12 +212,18 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
             </Button>
           )}
           {c.whatsapp && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`https://wa.me/55${c.whatsapp!.replace(/\D/g, "")}`, "_blank")}>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              logHistorico(c.id, "whatsapp_enviado", `WhatsApp enviado para ${c.whatsapp}`);
+              window.open(`https://wa.me/55${c.whatsapp!.replace(/\D/g, "")}`, "_blank");
+            }}>
               <Send className="h-3.5 w-3.5" /> WhatsApp
             </Button>
           )}
           {c.email && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`mailto:${c.email}`)}>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              logHistorico(c.id, "email_enviado", `E-mail enviado para ${c.email}`);
+              window.open(`mailto:${c.email}`);
+            }}>
               <Mail className="h-3.5 w-3.5" /> E-mail
             </Button>
           )}
@@ -263,9 +273,10 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
 
       {/* Tabs: Dados (info + endereços) | Obras */}
       <Tabs defaultValue="dados" className="space-y-4">
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
+        <TabsList className="grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="dados" className="gap-1.5 text-xs"><User className="h-3.5 w-3.5" /> Dados</TabsTrigger>
           <TabsTrigger value="obras" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" /> Obras</TabsTrigger>
+          <TabsTrigger value="historico" className="gap-1.5 text-xs"><History className="h-3.5 w-3.5" /> Histórico</TabsTrigger>
         </TabsList>
 
         {/* Dados Tab */}
@@ -531,6 +542,62 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Histórico Tab */}
+        <TabsContent value="historico">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Histórico de Atividades</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {c.historico.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <History className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Nenhum registro no histórico</p>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+                  <div className="space-y-4">
+                    {c.historico.map((h) => {
+                      const iconMap: Record<string, React.ReactNode> = {
+                        criacao: <Plus className="h-3.5 w-3.5" />,
+                        edicao: <Pencil className="h-3.5 w-3.5" />,
+                        obra_adicionada: <Building2 className="h-3.5 w-3.5" />,
+                        endereco_adicionado: <MapPin className="h-3.5 w-3.5" />,
+                        email_enviado: <Mail className="h-3.5 w-3.5" />,
+                        whatsapp_enviado: <Send className="h-3.5 w-3.5" />,
+                        compra: <Shield className="h-3.5 w-3.5" />,
+                        status_alterado: <Check className="h-3.5 w-3.5" />,
+                      };
+                      return (
+                        <div key={h.id} className="relative pl-10">
+                          <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-muted flex items-center justify-center text-muted-foreground z-10">
+                            {iconMap[h.tipo] || <History className="h-3.5 w-3.5" />}
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/30">
+                            <p className="text-sm text-foreground">{h.descricao}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-muted-foreground">
+                                {format(new Date(h.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                              </span>
+                              {h.user_name && (
+                                <>
+                                  <span className="text-[10px] text-muted-foreground">·</span>
+                                  <span className="text-[10px] text-muted-foreground">{h.user_name}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </CardContent>

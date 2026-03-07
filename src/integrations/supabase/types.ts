@@ -108,6 +108,47 @@ export type Database = {
           },
         ]
       }
+      cliente_historico: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          descricao: string
+          detalhes: Json | null
+          id: string
+          tipo: string
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          descricao: string
+          detalhes?: Json | null
+          id?: string
+          tipo: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          descricao?: string
+          detalhes?: Json | null
+          id?: string
+          tipo?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_historico_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_obras: {
         Row: {
           cliente_id: string
