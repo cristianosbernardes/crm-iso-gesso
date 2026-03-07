@@ -232,10 +232,11 @@ const Clientes = () => {
                   <Label>{form.tipo === "pj" ? "CNPJ" : "CPF"}</Label>
                   <Input
                     value={form.documento}
-                    onChange={(e) => setField("documento", form.tipo === "pj" ? maskCNPJ(e.target.value) : maskCPF(e.target.value))}
+                    onChange={(e) => handleNumericField("documento", e.target.value, form.tipo === "pj" ? maskCNPJ : maskCPF)}
                     placeholder={form.tipo === "pj" ? "00.000.000/0001-00" : "000.000.000-00"}
                     maxLength={form.tipo === "pj" ? 18 : 14}
                   />
+                  {letterWarnings.documento && <p className="text-xs text-destructive/80 mt-1">*apenas números</p>}
                   {errors.documento && <p className="text-xs text-destructive mt-1">{errors.documento}</p>}
                 </div>
                 <div>
@@ -244,6 +245,7 @@ const Clientes = () => {
                     type="email"
                     value={form.email}
                     onChange={(e) => setField("email", e.target.value)}
+                    onBlur={handleEmailBlur}
                     placeholder="email@empresa.com"
                   />
                   {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
@@ -252,20 +254,22 @@ const Clientes = () => {
                   <Label>Telefone</Label>
                   <Input
                     value={form.telefone}
-                    onChange={(e) => setField("telefone", maskPhone(e.target.value))}
+                    onChange={(e) => handleNumericField("telefone", e.target.value, maskPhone)}
                     placeholder="(11) 3333-0000"
                     maxLength={14}
                   />
+                  {letterWarnings.telefone && <p className="text-xs text-destructive/80 mt-1">*apenas números</p>}
                   {errors.telefone && <p className="text-xs text-destructive mt-1">{errors.telefone}</p>}
                 </div>
                 <div>
                   <Label>WhatsApp</Label>
                   <Input
                     value={form.whatsapp}
-                    onChange={(e) => setField("whatsapp", maskCelular(e.target.value))}
+                    onChange={(e) => handleNumericField("whatsapp", e.target.value, maskCelular)}
                     placeholder="(11) 99999-0000"
                     maxLength={15}
                   />
+                  {letterWarnings.whatsapp && <p className="text-xs text-destructive/80 mt-1">*apenas números</p>}
                   {errors.whatsapp && <p className="text-xs text-destructive mt-1">{errors.whatsapp}</p>}
                 </div>
               </div>
@@ -280,6 +284,8 @@ const Clientes = () => {
                     <Input
                       value={form.cep}
                       onChange={(e) => {
+                        const hasLetters = /[a-zA-Z]/.test(e.target.value);
+                        setLetterWarnings((prev) => ({ ...prev, cep: hasLetters }));
                         const masked = maskCEP(e.target.value);
                         setField("cep", masked);
                         setCepError("");
