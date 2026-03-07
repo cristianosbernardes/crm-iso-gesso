@@ -132,7 +132,7 @@ export function useClientes() {
     queryKey: ["cliente_historico"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("cliente_historico")
+        .from("cliente_historico" as any)
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
