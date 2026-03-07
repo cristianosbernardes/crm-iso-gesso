@@ -76,15 +76,21 @@ const Clientes = () => {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
+  const ESTADOS_BR = [
+    "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT",
+    "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
+  ];
+
   const fetchCEP = useCallback(async (cep: string) => {
     const digits = onlyDigits(cep);
     if (digits.length !== 8) return;
     setCepLoading(true);
+    setCepError("");
     try {
       const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
       const data = await res.json();
       if (data.erro) {
-        toast.error("CEP não encontrado");
+        setCepError("CEP não encontrado. Preencha o endereço manualmente.");
         return;
       }
       setForm((prev) => ({
@@ -95,7 +101,7 @@ const Clientes = () => {
         estado: data.uf || "",
       }));
     } catch {
-      toast.error("Erro ao buscar CEP");
+      setCepError("Erro ao buscar CEP. Preencha o endereço manualmente.");
     } finally {
       setCepLoading(false);
     }
@@ -263,6 +269,7 @@ const Clientes = () => {
                       onChange={(e) => {
                         const masked = maskCEP(e.target.value);
                         setField("cep", masked);
+                        setCepError("");
                         if (onlyDigits(masked).length === 8) fetchCEP(masked);
                       }}
                       placeholder="00000-000"
@@ -270,10 +277,18 @@ const Clientes = () => {
                     />
                     {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
                   </div>
+                  {cepError && <p className="text-xs text-amber-600 mt-1">{cepError}</p>}
                 </div>
                 <div>
                   <Label>Estado</Label>
-                  <Input value={form.estado} onChange={(e) => setField("estado", e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase())} placeholder="SP" maxLength={2} readOnly={cepLoading} />
+                  <Select value={form.estado} onValueChange={(v) => setField("estado", v)}>
+                    <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                    <SelectContent>
+                      {ESTADOS_BR.map((uf) => (
+                        <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="col-span-2">
                   <Label>Logradouro</Label>
