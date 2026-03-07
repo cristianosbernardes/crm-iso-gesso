@@ -183,15 +183,6 @@ const Clientes = () => {
     setDialogOpen(false);
   };
 
-  // Detail view
-  if (currentCliente) {
-    return (
-      <ClienteDetalhe
-        cliente={currentCliente}
-        onBack={() => setClienteSelecionado(null)}
-      />
-    );
-  }
 
   if (isLoading) {
     return (
@@ -376,7 +367,7 @@ const Clientes = () => {
       {/* Client Cards */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((c) => (
-          <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => setClienteSelecionado(c)}>
+          <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => navigate(`/dashboard/clientes/${c.id}`)}>
             <CardContent className="p-5">
               <div className="flex items-center gap-4 mb-3">
                 <Avatar className="h-12 w-12">
