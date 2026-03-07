@@ -277,7 +277,7 @@ const Clientes = () => {
                     />
                     {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
                   </div>
-                  {cepError && <p className="text-xs text-amber-600 mt-1">{cepError}</p>}
+                  {cepError && <p className="text-xs text-destructive/80 mt-1">{cepError}</p>}
                 </div>
                 <div>
                   <Label>Estado</Label>
