@@ -7,37 +7,119 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Sun, Moon, Save, Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Shield, Sun, Moon, Save, Lock, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Perfil = () => {
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains("dark");
-    }
-    return false;
+  const { user } = useAuth();
+  const qc = useQueryClient();
+
+  // Fetch profile
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["my-profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
   });
 
+  // Fetch roles
+  const { data: roles } = useQuery({
+    queryKey: ["my-roles", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return (data || []).map((r) => r.role);
+    },
+    enabled: !!user,
+  });
+
+  // Form state
+  const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [cargo, setCargo] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setNome(profile.full_name || "");
+      setTelefone(profile.phone || "");
+      setCargo(profile.cargo || "");
+    }
+  }, [profile]);
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: nome,
+          phone: telefone,
+          cargo,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+      if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["my-profile"] });
+      toast.success("Perfil atualizado!");
+    } catch (e: any) {
+      toast.error("Erro ao salvar: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Password
+  const [darkMode, setDarkMode] = useState(() =>
+    typeof window !== "undefined" ? document.documentElement.classList.contains("dark") : false
+  );
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [showSenhaAtual, setShowSenhaAtual] = useState(false);
   const [showNovaSenha, setShowNovaSenha] = useState(false);
   const [showConfirmar, setShowConfirmar] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const senhaMinLength = novaSenha.length >= 8;
   const senhaTemMaiuscula = /[A-Z]/.test(novaSenha);
   const senhaTemNumero = /[0-9]/.test(novaSenha);
   const senhaTemEspecial = /[^A-Za-z0-9]/.test(novaSenha);
   const senhasConferem = novaSenha === confirmarSenha && confirmarSenha.length > 0;
-  const senhaValida = senhaMinLength && senhaTemMaiuscula && senhaTemNumero && senhaTemEspecial && senhasConferem && senhaAtual.length > 0;
+  const senhaValida = senhaMinLength && senhaTemMaiuscula && senhaTemNumero && senhaTemEspecial && senhasConferem;
 
-  const handleTrocarSenha = () => {
+  const handleTrocarSenha = async () => {
     if (!senhaValida) return;
-    toast.success("Senha alterada com sucesso!");
-    setSenhaAtual("");
-    setNovaSenha("");
-    setConfirmarSenha("");
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: novaSenha });
+      if (error) throw error;
+      toast.success("Senha alterada com sucesso!");
+      setSenhaAtual("");
+      setNovaSenha("");
+      setConfirmarSenha("");
+    } catch (e: any) {
+      toast.error("Erro ao alterar senha: " + e.message);
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   const PasswordRule = ({ ok, text }: { ok: boolean; text: string }) => (
@@ -55,6 +137,28 @@ const Perfil = () => {
     }
   }, [darkMode]);
 
+  const getInitials = (name: string) =>
+    name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+
+  const roleLabels: Record<string, string> = {
+    admin: "Administrador",
+    tecnico: "Técnico",
+    vendedor: "Vendedor",
+    estoquista: "Estoquista",
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 lg:p-8 space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64 lg:col-span-2" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-8 space-y-6">
       <div>
@@ -68,15 +172,23 @@ const Perfil = () => {
           <CardContent className="flex flex-col items-center pt-8 pb-6 text-center">
             <Avatar className="h-24 w-24 mb-4">
               <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
-                JA
+                {getInitials(nome || user?.email || "?")}
               </AvatarFallback>
             </Avatar>
-            <h2 className="text-xl font-bold text-foreground">João Administrador</h2>
-            <p className="text-sm text-muted-foreground mt-1">Diretor</p>
-            <Badge variant="secondary" className="mt-3 gap-1 bg-primary/15 text-primary">
-              <Shield className="h-3 w-3" /> Administrador
-            </Badge>
-            <p className="text-xs text-muted-foreground mt-4">Membro desde Jan 2024</p>
+            <h2 className="text-xl font-bold text-foreground">{nome || "Sem nome"}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{cargo || "Sem cargo"}</p>
+            {roles && roles.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
+                {roles.map((r) => (
+                  <Badge key={r} variant="secondary" className="gap-1 bg-primary/15 text-primary">
+                    <Shield className="h-3 w-3" /> {roleLabels[r] || r}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-4">
+              Membro desde {profile?.created_at ? new Date(profile.created_at).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }) : "—"}
+            </p>
           </CardContent>
         </Card>
 
@@ -88,23 +200,24 @@ const Perfil = () => {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Nome completo</Label>
-              <Input defaultValue="João Administrador" />
+              <Input value={nome} onChange={(e) => setNome(e.target.value)} />
             </div>
             <div>
               <Label>E-mail</Label>
-              <Input defaultValue="joao@isogesso.com" type="email" />
+              <Input value={user?.email || ""} type="email" readOnly className="bg-muted/50 cursor-not-allowed" />
             </div>
             <div>
               <Label>Telefone</Label>
-              <Input defaultValue="(11) 99999-0001" />
+              <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-0000" />
             </div>
             <div>
               <Label>Cargo</Label>
-              <Input defaultValue="Diretor" />
+              <Input value={cargo} onChange={(e) => setCargo(e.target.value)} placeholder="Diretor, Gerente..." />
             </div>
             <div className="md:col-span-2">
-              <Button className="gap-2">
-                <Save className="h-4 w-4" /> Salvar Alterações
+              <Button className="gap-2" onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
           </CardContent>
@@ -119,25 +232,7 @@ const Perfil = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Senha atual</Label>
-                <div className="relative">
-                  <Input
-                    type={showSenhaAtual ? "text" : "password"}
-                    value={senhaAtual}
-                    onChange={(e) => setSenhaAtual(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowSenhaAtual(!showSenhaAtual)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showSenhaAtual ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Nova senha</Label>
                 <div className="relative">
@@ -147,11 +242,7 @@ const Perfil = () => {
                     onChange={(e) => setNovaSenha(e.target.value)}
                     placeholder="••••••••"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowNovaSenha(!showNovaSenha)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
+                  <button type="button" onClick={() => setShowNovaSenha(!showNovaSenha)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showNovaSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -165,11 +256,7 @@ const Perfil = () => {
                     onChange={(e) => setConfirmarSenha(e.target.value)}
                     placeholder="••••••••"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmar(!showConfirmar)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
+                  <button type="button" onClick={() => setShowConfirmar(!showConfirmar)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showConfirmar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -188,12 +275,9 @@ const Perfil = () => {
               </div>
             )}
 
-            <Button
-              className="gap-2"
-              disabled={!senhaValida}
-              onClick={handleTrocarSenha}
-            >
-              <Lock className="h-4 w-4" /> Alterar Senha
+            <Button className="gap-2" disabled={!senhaValida || changingPassword} onClick={handleTrocarSenha}>
+              {changingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+              {changingPassword ? "Alterando..." : "Alterar Senha"}
             </Button>
           </CardContent>
         </Card>
