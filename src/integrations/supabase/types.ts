@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      cargos: {
+        Row: {
+          bonus_percent: number | null
+          comissao_percent: number
+          created_at: string
+          id: string
+          meta_bonus: number | null
+          nome: string
+          padrao: boolean
+          updated_at: string
+        }
+        Insert: {
+          bonus_percent?: number | null
+          comissao_percent?: number
+          created_at?: string
+          id?: string
+          meta_bonus?: number | null
+          nome: string
+          padrao?: boolean
+          updated_at?: string
+        }
+        Update: {
+          bonus_percent?: number | null
+          comissao_percent?: number
+          created_at?: string
+          id?: string
+          meta_bonus?: number | null
+          nome?: string
+          padrao?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente_contatos: {
         Row: {
           cargo: string | null
