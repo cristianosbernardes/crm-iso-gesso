@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft, Building2, Mail, Phone, Send, MapPin,
-  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2,
+  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2, Trash2,
 } from "lucide-react";
 import { type ClienteComRelacoes } from "@/hooks/useClientes";
 import { useClientes } from "@/hooks/useClientes";
@@ -63,7 +64,7 @@ const maskCEP = (v: string) => {
 };
 
 const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
-  const { updateCliente, createObra, createEndereco } = useClientes();
+  const { updateCliente, createObra, createEndereco, deleteCliente } = useClientes();
   const [editing, setEditing] = useState(false);
   const [obraDialogOpen, setObraDialogOpen] = useState(false);
   const [endDialogOpen, setEndDialogOpen] = useState(false);

@@ -209,11 +209,24 @@ export function useClientes() {
     onError: (e: Error) => toast.error("Erro: " + e.message),
   });
 
+  const deleteCliente = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("clientes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateAll();
+      toast.success("Cliente excluído!");
+    },
+    onError: (e: Error) => toast.error("Erro ao excluir: " + e.message),
+  });
+
   return {
     clientes: clientesComRelacoes,
     isLoading: clientesQuery.isLoading,
     createCliente,
     updateCliente,
+    deleteCliente,
     createObra,
     updateObra,
     createEndereco,
