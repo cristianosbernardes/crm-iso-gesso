@@ -160,14 +160,14 @@ export function useClientes() {
   const logHistorico = async (clienteId: string, tipo: string, descricao: string, detalhes?: Record<string, unknown>) => {
     const { data: { user } } = await supabase.auth.getUser();
     const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user?.id || "").single();
-    await supabase.from("cliente_historico").insert({
+    await supabase.from("cliente_historico" as any).insert({
       cliente_id: clienteId,
       user_id: user?.id,
       user_name: profile?.full_name || user?.email || "Sistema",
       tipo,
       descricao,
       detalhes: detalhes || null,
-    });
+    } as any);
   };
 
   const createCliente = useMutation({
