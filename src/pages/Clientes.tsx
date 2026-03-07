@@ -15,8 +15,7 @@ import {
   Search, Plus, Phone, Mail, MapPin, ChevronRight,
   Building2, Users, Filter, SortAsc, Loader2,
 } from "lucide-react";
-import { useClientes, type ClienteComRelacoes } from "@/hooks/useClientes";
-import ClienteDetalhe from "@/components/clientes/ClienteDetalhe";
+import { useClientes } from "@/hooks/useClientes";
 import { toast } from "sonner";
 
 // ── Mask helpers ──
