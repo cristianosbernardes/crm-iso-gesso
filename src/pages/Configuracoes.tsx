@@ -20,6 +20,7 @@ import {
   Settings, Activity, Globe, Key, Copy, ArrowUpDown, Info
 } from "lucide-react";
 import { toast } from "sonner";
+import GestorCargos from "@/components/configuracoes/GestorCargos";
 
 // ══════════════════════════════════════════════════════════════
 // MOCK DATA
@@ -491,6 +492,7 @@ const Configuracoes = () => (
     <Tabs defaultValue="empresa" className="space-y-6">
       <TabsList className="h-auto flex-wrap">
         <TabsTrigger value="empresa" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" />Empresa</TabsTrigger>
+        <TabsTrigger value="cargos" className="gap-1.5 text-xs"><User className="h-3.5 w-3.5" />Cargos</TabsTrigger>
         <TabsTrigger value="integracoes" className="gap-1.5 text-xs"><Plug className="h-3.5 w-3.5" />Integrações</TabsTrigger>
         <TabsTrigger value="auditoria" className="gap-1.5 text-xs"><ScrollText className="h-3.5 w-3.5" />Auditoria</TabsTrigger>
         <TabsTrigger value="webhooks" className="gap-1.5 text-xs"><Webhook className="h-3.5 w-3.5" />Webhooks</TabsTrigger>
