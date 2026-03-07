@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,49 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import {
   Search, Plus, Phone, Mail, MapPin, ChevronRight,
-  Building2, Users, Filter, SortAsc,
+  Building2, Users, Filter, SortAsc, Loader2,
 } from "lucide-react";
 import { useClientes, type ClienteComRelacoes } from "@/hooks/useClientes";
 import ClienteDetalhe from "@/components/clientes/ClienteDetalhe";
+import { toast } from "sonner";
+
+// ── Mask helpers ──
+const onlyDigits = (v: string) => v.replace(/\D/g, "");
+
+const maskCPF = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+};
+
+const maskCNPJ = (v: string) => {
+  const d = onlyDigits(v).slice(0, 14);
+  return d.replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+};
+
+const maskPhone = (v: string) => {
+  const d = onlyDigits(v).slice(0, 10);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+};
+
+const maskCelular = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
+const maskCEP = (v: string) => {
+  const d = onlyDigits(v).slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+};
+
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const Clientes = () => {
   const { clientes, isLoading, createCliente } = useClientes();
@@ -23,12 +60,45 @@ const Clientes = () => {
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [ordenacao, setOrdenacao] = useState("nome");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // New client form
   const [form, setForm] = useState({
     nome: "", tipo: "pj" as "pf" | "pj", documento: "", email: "",
     telefone: "", whatsapp: "", cidade: "", estado: "",
+    cep: "", logradouro: "", bairro: "", numero: "", complemento: "",
   });
+
+  const setField = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const fetchCEP = useCallback(async (cep: string) => {
+    const digits = onlyDigits(cep);
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        logradouro: data.logradouro || "",
+        bairro: data.bairro || "",
+        cidade: data.localidade || "",
+        estado: data.uf || "",
+      }));
+    } catch {
+      toast.error("Erro ao buscar CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }, []);
 
   const filtered = clientes
     .filter((c) => {
@@ -55,8 +125,20 @@ const Clientes = () => {
     ? clientes.find((c) => c.id === clienteSelecionado.id) || clienteSelecionado
     : null;
 
+  const validateForm = () => {
+    const errs: Record<string, string> = {};
+    if (!form.nome.trim()) errs.nome = "Nome é obrigatório";
+    if (form.tipo === "pf" && onlyDigits(form.documento).length !== 11) errs.documento = "CPF deve ter 11 dígitos";
+    if (form.tipo === "pj" && onlyDigits(form.documento).length !== 14) errs.documento = "CNPJ deve ter 14 dígitos";
+    if (form.email && !isValidEmail(form.email)) errs.email = "E-mail inválido (ex: nome@dominio.com)";
+    if (form.telefone && onlyDigits(form.telefone).length < 10) errs.telefone = "Telefone deve ter 10 dígitos";
+    if (form.whatsapp && onlyDigits(form.whatsapp).length < 10) errs.whatsapp = "WhatsApp deve ter 10 ou 11 dígitos";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleCreate = async () => {
-    if (!form.nome) return;
+    if (!validateForm()) return;
     await createCliente.mutateAsync({
       nome: form.nome,
       tipo: form.tipo,
@@ -67,7 +149,8 @@ const Clientes = () => {
       cidade: form.cidade || undefined,
       estado: form.estado || undefined,
     });
-    setForm({ nome: "", tipo: "pj", documento: "", email: "", telefone: "", whatsapp: "", cidade: "", estado: "" });
+    setForm({ nome: "", tipo: "pj", documento: "", email: "", telefone: "", whatsapp: "", cidade: "", estado: "", cep: "", logradouro: "", bairro: "", numero: "", complemento: "" });
+    setErrors({});
     setDialogOpen(false);
   };
 
@@ -108,15 +191,16 @@ const Clientes = () => {
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Cadastrar Novo Cliente</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4 pt-2 max-h-[70vh] overflow-y-auto pr-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label>Nome / Razão Social</Label>
-                  <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Nome do cliente" />
+                  <Label>Nome / Razão Social *</Label>
+                  <Input value={form.nome} onChange={(e) => setField("nome", e.target.value)} placeholder="Nome do cliente" />
+                  {errors.nome && <p className="text-xs text-destructive mt-1">{errors.nome}</p>}
                 </div>
                 <div>
                   <Label>Tipo</Label>
-                  <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v as "pf" | "pj" })}>
+                  <Select value={form.tipo} onValueChange={(v) => { setField("tipo", v); setField("documento", ""); }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pj">Pessoa Jurídica</SelectItem>
@@ -126,29 +210,92 @@ const Clientes = () => {
                 </div>
                 <div>
                   <Label>{form.tipo === "pj" ? "CNPJ" : "CPF"}</Label>
-                  <Input value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value })} placeholder={form.tipo === "pj" ? "00.000.000/0001-00" : "000.000.000-00"} />
+                  <Input
+                    value={form.documento}
+                    onChange={(e) => setField("documento", form.tipo === "pj" ? maskCNPJ(e.target.value) : maskCPF(e.target.value))}
+                    placeholder={form.tipo === "pj" ? "00.000.000/0001-00" : "000.000.000-00"}
+                    maxLength={form.tipo === "pj" ? 18 : 14}
+                  />
+                  {errors.documento && <p className="text-xs text-destructive mt-1">{errors.documento}</p>}
                 </div>
                 <div>
                   <Label>E-mail</Label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@empresa.com" />
+                  <Input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setField("email", e.target.value)}
+                    placeholder="email@empresa.com"
+                  />
+                  {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
                 </div>
                 <div>
                   <Label>Telefone</Label>
-                  <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="(11) 3333-0000" />
+                  <Input
+                    value={form.telefone}
+                    onChange={(e) => setField("telefone", maskPhone(e.target.value))}
+                    placeholder="(11) 3333-0000"
+                    maxLength={14}
+                  />
+                  {errors.telefone && <p className="text-xs text-destructive mt-1">{errors.telefone}</p>}
                 </div>
                 <div>
                   <Label>WhatsApp</Label>
-                  <Input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="(11) 99999-0000" />
+                  <Input
+                    value={form.whatsapp}
+                    onChange={(e) => setField("whatsapp", maskCelular(e.target.value))}
+                    placeholder="(11) 99999-0000"
+                    maxLength={15}
+                  />
+                  {errors.whatsapp && <p className="text-xs text-destructive mt-1">{errors.whatsapp}</p>}
                 </div>
+              </div>
+
+              <Separator />
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Endereço</p>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Cidade</Label>
-                  <Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} placeholder="São Paulo" />
+                  <Label>CEP</Label>
+                  <div className="relative">
+                    <Input
+                      value={form.cep}
+                      onChange={(e) => {
+                        const masked = maskCEP(e.target.value);
+                        setField("cep", masked);
+                        if (onlyDigits(masked).length === 8) fetchCEP(masked);
+                      }}
+                      placeholder="00000-000"
+                      maxLength={9}
+                    />
+                    {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                  </div>
                 </div>
                 <div>
                   <Label>Estado</Label>
-                  <Input value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })} placeholder="SP" maxLength={2} />
+                  <Input value={form.estado} onChange={(e) => setField("estado", e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase())} placeholder="SP" maxLength={2} readOnly={cepLoading} />
+                </div>
+                <div className="col-span-2">
+                  <Label>Logradouro</Label>
+                  <Input value={form.logradouro} onChange={(e) => setField("logradouro", e.target.value)} placeholder="Rua, Avenida..." readOnly={cepLoading} />
+                </div>
+                <div>
+                  <Label>Número</Label>
+                  <Input value={form.numero} onChange={(e) => setField("numero", e.target.value)} placeholder="123" />
+                </div>
+                <div>
+                  <Label>Bairro</Label>
+                  <Input value={form.bairro} onChange={(e) => setField("bairro", e.target.value)} placeholder="Bairro" readOnly={cepLoading} />
+                </div>
+                <div>
+                  <Label>Cidade</Label>
+                  <Input value={form.cidade} onChange={(e) => setField("cidade", e.target.value)} placeholder="São Paulo" readOnly={cepLoading} />
+                </div>
+                <div>
+                  <Label>Complemento</Label>
+                  <Input value={form.complemento} onChange={(e) => setField("complemento", e.target.value)} placeholder="Sala 10, Bloco B..." />
                 </div>
               </div>
+
               <Button onClick={handleCreate} className="w-full gap-2" disabled={createCliente.isPending}>
                 <Plus className="h-4 w-4" />
                 {createCliente.isPending ? "Cadastrando..." : "Cadastrar Cliente"}
