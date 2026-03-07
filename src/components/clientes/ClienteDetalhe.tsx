@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft, Building2, Mail, Phone, Send, MapPin,
-  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2, Trash2,
+  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2, Trash2, History,
 } from "lucide-react";
 import { type ClienteComRelacoes } from "@/hooks/useClientes";
 import { useClientes } from "@/hooks/useClientes";
+import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface Props {
@@ -64,7 +65,7 @@ const maskCEP = (v: string) => {
 };
 
 const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
-  const { updateCliente, createObra, createEndereco, deleteCliente } = useClientes();
+  const { updateCliente, createObra, createEndereco, deleteCliente, logHistorico } = useClientes();
   const [editing, setEditing] = useState(false);
   const [obraDialogOpen, setObraDialogOpen] = useState(false);
   const [endDialogOpen, setEndDialogOpen] = useState(false);
