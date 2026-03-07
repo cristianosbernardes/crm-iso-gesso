@@ -159,7 +159,7 @@ const Clientes = () => {
 
   const handleCreate = async () => {
     if (!validateForm()) return;
-    await createCliente.mutateAsync({
+    const cliente = await createCliente.mutateAsync({
       nome: form.nome,
       tipo: form.tipo,
       documento: form.documento || undefined,
@@ -169,6 +169,19 @@ const Clientes = () => {
       cidade: form.cidade || undefined,
       estado: form.estado || undefined,
     });
+    // Save address if logradouro was filled
+    if (form.logradouro && cliente) {
+      await createEndereco.mutateAsync({
+        cliente_id: cliente.id,
+        tipo: "sede",
+        logradouro: form.logradouro,
+        numero: form.numero || undefined,
+        bairro: form.bairro || undefined,
+        cidade: form.cidade || undefined,
+        estado: form.estado || undefined,
+        cep: form.cep || undefined,
+      });
+    }
     setForm({ nome: "", tipo: "pj", documento: "", email: "", telefone: "", whatsapp: "", cidade: "", estado: "", cep: "", logradouro: "", bairro: "", numero: "", complemento: "" });
     setErrors({});
     setDialogOpen(false);
