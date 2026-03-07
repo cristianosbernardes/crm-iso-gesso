@@ -547,6 +547,62 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Histórico Tab */}
+        <TabsContent value="historico">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Histórico de Atividades</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {c.historico.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <History className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Nenhum registro no histórico</p>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+                  <div className="space-y-4">
+                    {c.historico.map((h) => {
+                      const iconMap: Record<string, React.ReactNode> = {
+                        criacao: <Plus className="h-3.5 w-3.5" />,
+                        edicao: <Pencil className="h-3.5 w-3.5" />,
+                        obra_adicionada: <Building2 className="h-3.5 w-3.5" />,
+                        endereco_adicionado: <MapPin className="h-3.5 w-3.5" />,
+                        email_enviado: <Mail className="h-3.5 w-3.5" />,
+                        whatsapp_enviado: <Send className="h-3.5 w-3.5" />,
+                        compra: <Shield className="h-3.5 w-3.5" />,
+                        status_alterado: <Check className="h-3.5 w-3.5" />,
+                      };
+                      return (
+                        <div key={h.id} className="relative pl-10">
+                          <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-muted flex items-center justify-center text-muted-foreground z-10">
+                            {iconMap[h.tipo] || <History className="h-3.5 w-3.5" />}
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/30">
+                            <p className="text-sm text-foreground">{h.descricao}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-muted-foreground">
+                                {format(new Date(h.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                              </span>
+                              {h.user_name && (
+                                <>
+                                  <span className="text-[10px] text-muted-foreground">·</span>
+                                  <span className="text-[10px] text-muted-foreground">{h.user_name}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
