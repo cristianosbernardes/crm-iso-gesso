@@ -63,6 +63,7 @@ const Clientes = () => {
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [letterWarnings, setLetterWarnings] = useState<Record<string, boolean>>({});
 
   // New client form
   const [form, setForm] = useState({
