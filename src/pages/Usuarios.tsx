@@ -285,8 +285,8 @@ const Usuarios = () => {
                   <SheetTitle className="sr-only">{currentUser.full_name || currentUser.email}</SheetTitle>
                 </SheetHeader>
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-18 w-18 border-2 border-background shadow-md">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold h-18 w-18">
+                  <Avatar className="h-16 w-16 border-2 border-background shadow-md">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
                       {getInitials(currentUser)}
                     </AvatarFallback>
                   </Avatar>
