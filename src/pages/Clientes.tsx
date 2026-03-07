@@ -239,7 +239,7 @@ const Clientes = () => {
                   {letterWarnings.documento && <p className="text-xs text-destructive/80 mt-1">*apenas números</p>}
                   {errors.documento && <p className="text-xs text-destructive mt-1">{errors.documento}</p>}
                 </div>
-                <div>
+                <div className="col-span-2">
                   <Label>E-mail</Label>
                   <Input
                     type="email"
