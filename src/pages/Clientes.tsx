@@ -56,8 +56,8 @@ const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const Clientes = () => {
   const { clientes, isLoading, createCliente, createEndereco } = useClientes();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [clienteSelecionado, setClienteSelecionado] = useState<ClienteComRelacoes | null>(null);
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [ordenacao, setOrdenacao] = useState("nome");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -140,11 +140,6 @@ const Clientes = () => {
 
   const getInitials = (nome: string) =>
     nome.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-
-  // Keep selectedUser in sync with fetched data
-  const currentCliente = clienteSelecionado
-    ? clientes.find((c) => c.id === clienteSelecionado.id) || clienteSelecionado
-    : null;
 
   const validateForm = () => {
     const errs: Record<string, string> = {};
