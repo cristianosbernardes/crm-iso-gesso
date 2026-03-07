@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,7 @@ import {
   Search, Plus, Phone, Mail, MapPin, ChevronRight,
   Building2, Users, Filter, SortAsc, Loader2,
 } from "lucide-react";
-import { useClientes, type ClienteComRelacoes } from "@/hooks/useClientes";
-import ClienteDetalhe from "@/components/clientes/ClienteDetalhe";
+import { useClientes } from "@/hooks/useClientes";
 import { toast } from "sonner";
 
 // ── Mask helpers ──
@@ -55,8 +55,8 @@ const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const Clientes = () => {
   const { clientes, isLoading, createCliente, createEndereco } = useClientes();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [clienteSelecionado, setClienteSelecionado] = useState<ClienteComRelacoes | null>(null);
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [ordenacao, setOrdenacao] = useState("nome");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -140,11 +140,6 @@ const Clientes = () => {
   const getInitials = (nome: string) =>
     nome.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
-  // Keep selectedUser in sync with fetched data
-  const currentCliente = clienteSelecionado
-    ? clientes.find((c) => c.id === clienteSelecionado.id) || clienteSelecionado
-    : null;
-
   const validateForm = () => {
     const errs: Record<string, string> = {};
     if (!form.nome.trim()) errs.nome = "Nome é obrigatório";
@@ -187,15 +182,6 @@ const Clientes = () => {
     setDialogOpen(false);
   };
 
-  // Detail view
-  if (currentCliente) {
-    return (
-      <ClienteDetalhe
-        cliente={currentCliente}
-        onBack={() => setClienteSelecionado(null)}
-      />
-    );
-  }
 
   if (isLoading) {
     return (
@@ -380,7 +366,7 @@ const Clientes = () => {
       {/* Client Cards */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((c) => (
-          <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => setClienteSelecionado(c)}>
+          <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => navigate(`/dashboard/clientes/${c.id}`)}>
             <CardContent className="p-5">
               <div className="flex items-center gap-4 mb-3">
                 <Avatar className="h-12 w-12">
