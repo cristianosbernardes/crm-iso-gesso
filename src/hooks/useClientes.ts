@@ -136,7 +136,7 @@ export function useClientes() {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as ClienteHistorico[];
+      return (data || []) as unknown as ClienteHistorico[];
     },
   });
 
