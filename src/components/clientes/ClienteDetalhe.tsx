@@ -145,6 +145,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
       observacoes: editForm.observacoes || null,
       aniversario: editForm.aniversario || null,
     });
+    await logHistorico(c.id, "edicao", `Dados do cliente "${c.nome}" foram atualizados`);
     setEditing(false);
   };
 
@@ -156,6 +157,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
   const handleAddObra = async () => {
     if (!novaObra.nome) return;
     await createObra.mutateAsync({ cliente_id: c.id, ...novaObra });
+    await logHistorico(c.id, "obra_adicionada", `Obra "${novaObra.nome}" adicionada`);
     setNovaObra({ nome: "", endereco: "", status: "ativa" });
     setObraDialogOpen(false);
   };
