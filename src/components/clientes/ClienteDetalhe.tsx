@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft, Building2, Mail, Phone, Send, MapPin,
-  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2,
+  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2, Trash2,
 } from "lucide-react";
 import { type ClienteComRelacoes } from "@/hooks/useClientes";
 import { useClientes } from "@/hooks/useClientes";
@@ -63,7 +64,7 @@ const maskCEP = (v: string) => {
 };
 
 const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
-  const { updateCliente, createObra, createEndereco } = useClientes();
+  const { updateCliente, createObra, createEndereco, deleteCliente } = useClientes();
   const [editing, setEditing] = useState(false);
   const [obraDialogOpen, setObraDialogOpen] = useState(false);
   const [endDialogOpen, setEndDialogOpen] = useState(false);
@@ -146,6 +147,11 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
     setEditing(false);
   };
 
+  const handleDelete = async () => {
+    await deleteCliente.mutateAsync(c.id);
+    onBack();
+  };
+
   const handleAddObra = async () => {
     if (!novaObra.nome) return;
     await createObra.mutateAsync({ cliente_id: c.id, ...novaObra });
@@ -211,6 +217,27 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
               <Mail className="h-3.5 w-3.5" /> E-mail
             </Button>
           )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" /> Excluir
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação é irreversível. O cliente <strong>{c.nome}</strong> e todos os seus dados (endereços, obras, contatos) serão removidos permanentemente.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
