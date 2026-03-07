@@ -61,6 +61,7 @@ const Clientes = () => {
   const [ordenacao, setOrdenacao] = useState("nome");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // New client form
