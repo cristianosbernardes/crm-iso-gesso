@@ -77,6 +77,18 @@ const Clientes = () => {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
+  const handleNumericField = (field: string, rawValue: string, maskFn: (v: string) => string) => {
+    const hasLetters = /[a-zA-Z]/.test(rawValue);
+    setLetterWarnings((prev) => ({ ...prev, [field]: hasLetters }));
+    setField(field, maskFn(rawValue));
+  };
+
+  const handleEmailBlur = () => {
+    if (form.email && !isValidEmail(form.email)) {
+      setErrors((prev) => ({ ...prev, email: "E-mail inválido (ex: nome@dominio.com)" }));
+    }
+  };
+
   const ESTADOS_BR = [
     "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT",
     "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
