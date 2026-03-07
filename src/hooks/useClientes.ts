@@ -193,7 +193,8 @@ export function useClientes() {
       if (error) throw error;
       return data as Cliente;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      logHistorico(data.id, "criacao", `Cliente "${data.nome}" cadastrado`);
       invalidateAll();
       toast.success("Cliente cadastrado com sucesso!");
     },
@@ -269,6 +270,7 @@ export function useClientes() {
     createObra,
     updateObra,
     createEndereco,
+    logHistorico,
     invalidateAll,
   };
 }
