@@ -125,8 +125,20 @@ const Clientes = () => {
     ? clientes.find((c) => c.id === clienteSelecionado.id) || clienteSelecionado
     : null;
 
+  const validateForm = () => {
+    const errs: Record<string, string> = {};
+    if (!form.nome.trim()) errs.nome = "Nome é obrigatório";
+    if (form.tipo === "pf" && onlyDigits(form.documento).length !== 11) errs.documento = "CPF deve ter 11 dígitos";
+    if (form.tipo === "pj" && onlyDigits(form.documento).length !== 14) errs.documento = "CNPJ deve ter 14 dígitos";
+    if (form.email && !isValidEmail(form.email)) errs.email = "E-mail inválido (ex: nome@dominio.com)";
+    if (form.telefone && onlyDigits(form.telefone).length < 10) errs.telefone = "Telefone deve ter 10 dígitos";
+    if (form.whatsapp && onlyDigits(form.whatsapp).length < 10) errs.whatsapp = "WhatsApp deve ter 10 ou 11 dígitos";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleCreate = async () => {
-    if (!form.nome) return;
+    if (!validateForm()) return;
     await createCliente.mutateAsync({
       nome: form.nome,
       tipo: form.tipo,
@@ -137,7 +149,8 @@ const Clientes = () => {
       cidade: form.cidade || undefined,
       estado: form.estado || undefined,
     });
-    setForm({ nome: "", tipo: "pj", documento: "", email: "", telefone: "", whatsapp: "", cidade: "", estado: "" });
+    setForm({ nome: "", tipo: "pj", documento: "", email: "", telefone: "", whatsapp: "", cidade: "", estado: "", cep: "", logradouro: "", bairro: "", numero: "", complemento: "" });
+    setErrors({});
     setDialogOpen(false);
   };
 
