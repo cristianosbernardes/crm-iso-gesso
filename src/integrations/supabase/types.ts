@@ -14,6 +14,201 @@ export type Database = {
   }
   public: {
     Tables: {
+      cliente_contatos: {
+        Row: {
+          cargo: string | null
+          cliente_id: string
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          principal: boolean | null
+          telefone: string | null
+        }
+        Insert: {
+          cargo?: string | null
+          cliente_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          principal?: boolean | null
+          telefone?: string | null
+        }
+        Update: {
+          cargo?: string | null
+          cliente_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          principal?: boolean | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_contatos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_enderecos: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          cliente_id: string
+          complemento: string | null
+          created_at: string
+          estado: string | null
+          id: string
+          logradouro: string
+          numero: string | null
+          principal: boolean | null
+          tipo: string
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cliente_id: string
+          complemento?: string | null
+          created_at?: string
+          estado?: string | null
+          id?: string
+          logradouro: string
+          numero?: string | null
+          principal?: boolean | null
+          tipo?: string
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cliente_id?: string
+          complemento?: string | null
+          created_at?: string
+          estado?: string | null
+          id?: string
+          logradouro?: string
+          numero?: string | null
+          principal?: boolean | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_enderecos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_obras: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          endereco: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          rt60_calculado: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          rt60_calculado?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          rt60_calculado?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_obras_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clientes: {
+        Row: {
+          aniversario: string | null
+          cidade: string | null
+          created_at: string
+          created_by: string | null
+          documento: string | null
+          email: string | null
+          estado: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          status: string
+          tags: string[] | null
+          telefone: string | null
+          tipo: Database["public"]["Enums"]["tipo_pessoa"]
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          aniversario?: string | null
+          cidade?: string | null
+          created_at?: string
+          created_by?: string | null
+          documento?: string | null
+          email?: string | null
+          estado?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          status?: string
+          tags?: string[] | null
+          telefone?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_pessoa"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          aniversario?: string | null
+          cidade?: string | null
+          created_at?: string
+          created_by?: string | null
+          documento?: string | null
+          email?: string | null
+          estado?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          status?: string
+          tags?: string[] | null
+          telefone?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_pessoa"]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -96,6 +291,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "tecnico" | "vendedor" | "estoquista"
+      tipo_pessoa: "pf" | "pj"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -224,6 +420,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "tecnico", "vendedor", "estoquista"],
+      tipo_pessoa: ["pf", "pj"],
     },
   },
 } as const
