@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,49 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import {
   Search, Plus, Phone, Mail, MapPin, ChevronRight,
-  Building2, Users, Filter, SortAsc,
+  Building2, Users, Filter, SortAsc, Loader2,
 } from "lucide-react";
 import { useClientes, type ClienteComRelacoes } from "@/hooks/useClientes";
 import ClienteDetalhe from "@/components/clientes/ClienteDetalhe";
+import { toast } from "sonner";
+
+// ── Mask helpers ──
+const onlyDigits = (v: string) => v.replace(/\D/g, "");
+
+const maskCPF = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+};
+
+const maskCNPJ = (v: string) => {
+  const d = onlyDigits(v).slice(0, 14);
+  return d.replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+};
+
+const maskPhone = (v: string) => {
+  const d = onlyDigits(v).slice(0, 10);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+};
+
+const maskCelular = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
+const maskCEP = (v: string) => {
+  const d = onlyDigits(v).slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+};
+
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const Clientes = () => {
   const { clientes, isLoading, createCliente } = useClientes();
@@ -23,12 +60,45 @@ const Clientes = () => {
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [ordenacao, setOrdenacao] = useState("nome");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // New client form
   const [form, setForm] = useState({
     nome: "", tipo: "pj" as "pf" | "pj", documento: "", email: "",
     telefone: "", whatsapp: "", cidade: "", estado: "",
+    cep: "", logradouro: "", bairro: "", numero: "", complemento: "",
   });
+
+  const setField = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const fetchCEP = useCallback(async (cep: string) => {
+    const digits = onlyDigits(cep);
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        logradouro: data.logradouro || "",
+        bairro: data.bairro || "",
+        cidade: data.localidade || "",
+        estado: data.uf || "",
+      }));
+    } catch {
+      toast.error("Erro ao buscar CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }, []);
 
   const filtered = clientes
     .filter((c) => {
