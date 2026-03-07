@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,14 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft, Building2, Mail, Phone, Send, MapPin,
-  User, Shield, Calendar, Plus,
+  User, Shield, Calendar, Plus, Pencil, X, Check, Loader2,
 } from "lucide-react";
 import { type ClienteComRelacoes } from "@/hooks/useClientes";
 import { useClientes } from "@/hooks/useClientes";
+import { toast } from "sonner";
 
 interface Props {
   cliente: ClienteComRelacoes;
@@ -27,15 +29,119 @@ const statusObraCor: Record<string, string> = {
   pausada: "bg-muted text-muted-foreground",
 };
 
+const ESTADOS_BR = [
+  "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT",
+  "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
+];
+
+const onlyDigits = (v: string) => v.replace(/\D/g, "");
+
+const maskCPF = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+};
+const maskCNPJ = (v: string) => {
+  const d = onlyDigits(v).slice(0, 14);
+  return d.replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+};
+const maskPhone = (v: string) => {
+  const d = onlyDigits(v).slice(0, 10);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+};
+const maskCelular = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+const maskCEP = (v: string) => {
+  const d = onlyDigits(v).slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+};
+
 const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
   const { updateCliente, createObra, createEndereco } = useClientes();
+  const [editing, setEditing] = useState(false);
   const [obraDialogOpen, setObraDialogOpen] = useState(false);
   const [endDialogOpen, setEndDialogOpen] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState("");
+
+  const [editForm, setEditForm] = useState({
+    nome: c.nome,
+    tipo: c.tipo,
+    documento: c.documento || "",
+    email: c.email || "",
+    telefone: c.telefone || "",
+    whatsapp: c.whatsapp || "",
+    observacoes: c.observacoes || "",
+  });
+
   const [novaObra, setNovaObra] = useState({ nome: "", endereco: "", status: "ativa" });
-  const [novoEnd, setNovoEnd] = useState({ tipo: "entrega", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" });
+  const [novoEnd, setNovoEnd] = useState({ tipo: "entrega", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "", complemento: "" });
 
   const getInitials = (nome: string) =>
     nome.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+
+  const fetchCEP = useCallback(async (cep: string) => {
+    const digits = onlyDigits(cep);
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    setCepError("");
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        setCepError("CEP não encontrado. Preencha manualmente.");
+        return;
+      }
+      setNovoEnd((prev) => ({
+        ...prev,
+        logradouro: data.logradouro || "",
+        bairro: data.bairro || "",
+        cidade: data.localidade || "",
+        estado: data.uf || "",
+      }));
+    } catch {
+      setCepError("Erro ao buscar CEP. Preencha manualmente.");
+    } finally {
+      setCepLoading(false);
+    }
+  }, []);
+
+  const handleStartEdit = () => {
+    setEditForm({
+      nome: c.nome,
+      tipo: c.tipo,
+      documento: c.documento || "",
+      email: c.email || "",
+      telefone: c.telefone || "",
+      whatsapp: c.whatsapp || "",
+      observacoes: c.observacoes || "",
+    });
+    setEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editForm.nome.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+    await updateCliente.mutateAsync({
+      id: c.id,
+      nome: editForm.nome,
+      tipo: editForm.tipo,
+      documento: editForm.documento || null,
+      email: editForm.email || null,
+      telefone: editForm.telefone || null,
+      whatsapp: editForm.whatsapp || null,
+      observacoes: editForm.observacoes || null,
+    });
+    setEditing(false);
+  };
 
   const handleAddObra = async () => {
     if (!novaObra.nome) return;
@@ -46,8 +152,18 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
 
   const handleAddEnd = async () => {
     if (!novoEnd.logradouro) return;
-    await createEndereco.mutateAsync({ cliente_id: c.id, ...novoEnd });
-    setNovoEnd({ tipo: "entrega", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" });
+    await createEndereco.mutateAsync({
+      cliente_id: c.id,
+      tipo: novoEnd.tipo,
+      logradouro: novoEnd.logradouro,
+      numero: novoEnd.numero || undefined,
+      bairro: novoEnd.bairro || undefined,
+      cidade: novoEnd.cidade || undefined,
+      estado: novoEnd.estado || undefined,
+      cep: novoEnd.cep || undefined,
+    });
+    setNovoEnd({ tipo: "entrega", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "", complemento: "" });
+    setCepError("");
     setEndDialogOpen(false);
   };
 
@@ -75,13 +191,13 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
             {c.documento && `${c.documento} · `}
             {[c.cidade, c.estado].filter(Boolean).join(", ")}
           </p>
-          {c.tags && c.tags.length > 0 && (
-            <div className="flex gap-1.5 mt-1">
-              {c.tags.map((t) => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
-            </div>
-          )}
         </div>
         <div className="hidden md:flex gap-2">
+          {!editing && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleStartEdit}>
+              <Pencil className="h-3.5 w-3.5" /> Editar
+            </Button>
+          )}
           {c.whatsapp && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`https://wa.me/55${c.whatsapp!.replace(/\D/g, "")}`, "_blank")}>
               <Send className="h-3.5 w-3.5" /> WhatsApp
@@ -115,45 +231,105 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
         ))}
       </div>
 
-      {/* Tabs */}
+      {/* Tabs: Dados (info + endereços) | Obras */}
       <Tabs defaultValue="dados" className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid grid-cols-2 w-full max-w-md">
           <TabsTrigger value="dados" className="gap-1.5 text-xs"><User className="h-3.5 w-3.5" /> Dados</TabsTrigger>
-          <TabsTrigger value="enderecos" className="gap-1.5 text-xs"><MapPin className="h-3.5 w-3.5" /> Endereços</TabsTrigger>
           <TabsTrigger value="obras" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" /> Obras</TabsTrigger>
         </TabsList>
 
-        {/* Dados */}
-        <TabsContent value="dados">
+        {/* Dados Tab */}
+        <TabsContent value="dados" className="space-y-4">
+          {/* Contact Info */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Informações de Contato</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { icon: <User className="h-4 w-4" />, label: c.tipo === "pj" ? "Razão Social" : "Nome", value: c.nome },
-                { icon: <Shield className="h-4 w-4" />, label: c.tipo === "pj" ? "CNPJ" : "CPF", value: c.documento || "—" },
-                { icon: <Mail className="h-4 w-4" />, label: "E-mail", value: c.email || "—" },
-                { icon: <Phone className="h-4 w-4" />, label: "Telefone", value: c.telefone || "—" },
-                { icon: <Send className="h-4 w-4" />, label: "WhatsApp", value: c.whatsapp || "—" },
-                { icon: <Calendar className="h-4 w-4" />, label: "Aniversário", value: c.aniversario || "—" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 text-sm">
-                  <span className="text-muted-foreground">{item.icon}</span>
-                  <span className="text-muted-foreground w-28">{item.label}</span>
-                  <span className="text-foreground font-medium">{item.value}</span>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Informações de Contato</CardTitle>
+              {editing ? (
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setEditing(false)}>
+                    <X className="h-3.5 w-3.5" /> Cancelar
+                  </Button>
+                  <Button size="sm" className="gap-1.5" onClick={handleSaveEdit} disabled={updateCliente.isPending}>
+                    <Check className="h-3.5 w-3.5" /> {updateCliente.isPending ? "Salvando..." : "Salvar"}
+                  </Button>
                 </div>
-              ))}
-              {c.observacoes && (
-                <div className="p-3 rounded-lg bg-muted/50 mt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Observações</p>
-                  <p className="text-sm text-foreground">{c.observacoes}</p>
+              ) : (
+                <Button variant="outline" size="sm" className="gap-1.5 md:hidden" onClick={handleStartEdit}>
+                  <Pencil className="h-3.5 w-3.5" /> Editar
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {editing ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <Label>Nome / Razão Social *</Label>
+                    <Input value={editForm.nome} onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Tipo</Label>
+                    <Select value={editForm.tipo} onValueChange={(v: "pf" | "pj") => setEditForm({ ...editForm, tipo: v, documento: "" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pj">Pessoa Jurídica</SelectItem>
+                        <SelectItem value="pf">Pessoa Física</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>{editForm.tipo === "pj" ? "CNPJ" : "CPF"}</Label>
+                    <Input
+                      value={editForm.documento}
+                      onChange={(e) => setEditForm({ ...editForm, documento: editForm.tipo === "pj" ? maskCNPJ(e.target.value) : maskCPF(e.target.value) })}
+                      placeholder={editForm.tipo === "pj" ? "00.000.000/0001-00" : "000.000.000-00"}
+                      maxLength={editForm.tipo === "pj" ? 18 : 14}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>E-mail</Label>
+                    <Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} placeholder="email@empresa.com" />
+                  </div>
+                  <div>
+                    <Label>Telefone</Label>
+                    <Input value={editForm.telefone} onChange={(e) => setEditForm({ ...editForm, telefone: maskPhone(e.target.value) })} placeholder="(11) 3333-0000" maxLength={14} />
+                  </div>
+                  <div>
+                    <Label>WhatsApp</Label>
+                    <Input value={editForm.whatsapp} onChange={(e) => setEditForm({ ...editForm, whatsapp: maskCelular(e.target.value) })} placeholder="(11) 99999-0000" maxLength={15} />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>Observações</Label>
+                    <Textarea value={editForm.observacoes} onChange={(e) => setEditForm({ ...editForm, observacoes: e.target.value })} placeholder="Anotações sobre o cliente..." rows={3} />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {[
+                    { icon: <User className="h-4 w-4" />, label: c.tipo === "pj" ? "Razão Social" : "Nome", value: c.nome },
+                    { icon: <Shield className="h-4 w-4" />, label: c.tipo === "pj" ? "CNPJ" : "CPF", value: c.documento || "—" },
+                    { icon: <Mail className="h-4 w-4" />, label: "E-mail", value: c.email || "—" },
+                    { icon: <Phone className="h-4 w-4" />, label: "Telefone", value: c.telefone || "—" },
+                    { icon: <Send className="h-4 w-4" />, label: "WhatsApp", value: c.whatsapp || "—" },
+                    { icon: <Calendar className="h-4 w-4" />, label: "Aniversário", value: c.aniversario || "—" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 text-sm">
+                      <span className="text-muted-foreground">{item.icon}</span>
+                      <span className="text-muted-foreground w-28">{item.label}</span>
+                      <span className="text-foreground font-medium">{item.value}</span>
+                    </div>
+                  ))}
+                  {c.observacoes && (
+                    <div className="p-3 rounded-lg bg-muted/50 mt-4">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Observações</p>
+                      <p className="text-sm text-foreground">{c.observacoes}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Endereços */}
-        <TabsContent value="enderecos">
+          {/* Endereços */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Endereços</CardTitle>
@@ -163,7 +339,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Novo Endereço</DialogTitle></DialogHeader>
-                  <div className="space-y-4 pt-2">
+                  <div className="space-y-4 pt-2 max-h-[70vh] overflow-y-auto pr-1">
                     <div>
                       <Label>Tipo</Label>
                       <Select value={novoEnd.tipo} onValueChange={(v) => setNovoEnd({ ...novoEnd, tipo: v })}>
@@ -175,14 +351,47 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div><Label>Logradouro</Label><Input value={novoEnd.logradouro} onChange={(e) => setNovoEnd({ ...novoEnd, logradouro: e.target.value })} placeholder="Rua, Av..." /></div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div><Label>Número</Label><Input value={novoEnd.numero} onChange={(e) => setNovoEnd({ ...novoEnd, numero: e.target.value })} /></div>
+                      <div>
+                        <Label>CEP</Label>
+                        <div className="relative">
+                          <Input
+                            value={novoEnd.cep}
+                            onChange={(e) => {
+                              const masked = maskCEP(e.target.value);
+                              setNovoEnd((prev) => ({ ...prev, cep: masked }));
+                              setCepError("");
+                              if (onlyDigits(masked).length === 8) fetchCEP(masked);
+                            }}
+                            placeholder="00000-000"
+                            maxLength={9}
+                          />
+                          {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                        </div>
+                        {cepError && <p className="text-xs text-destructive/80 mt-1">{cepError}</p>}
+                      </div>
+                      <div>
+                        <Label>Estado</Label>
+                        <Select value={novoEnd.estado} onValueChange={(v) => setNovoEnd({ ...novoEnd, estado: v })}>
+                          <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                          <SelectContent>
+                            {ESTADOS_BR.map((uf) => (
+                              <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Logradouro</Label>
+                      <Input value={novoEnd.logradouro} onChange={(e) => setNovoEnd({ ...novoEnd, logradouro: e.target.value })} placeholder="Rua, Av..." />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><Label>Número</Label><Input value={novoEnd.numero} onChange={(e) => setNovoEnd({ ...novoEnd, numero: e.target.value })} placeholder="123" /></div>
                       <div><Label>Bairro</Label><Input value={novoEnd.bairro} onChange={(e) => setNovoEnd({ ...novoEnd, bairro: e.target.value })} /></div>
                       <div><Label>Cidade</Label><Input value={novoEnd.cidade} onChange={(e) => setNovoEnd({ ...novoEnd, cidade: e.target.value })} /></div>
-                      <div><Label>Estado</Label><Input value={novoEnd.estado} onChange={(e) => setNovoEnd({ ...novoEnd, estado: e.target.value })} maxLength={2} /></div>
+                      <div><Label>Complemento</Label><Input value={novoEnd.complemento} onChange={(e) => setNovoEnd({ ...novoEnd, complemento: e.target.value })} placeholder="Sala 10..." /></div>
                     </div>
-                    <div><Label>CEP</Label><Input value={novoEnd.cep} onChange={(e) => setNovoEnd({ ...novoEnd, cep: e.target.value })} placeholder="00000-000" /></div>
                     <Button onClick={handleAddEnd} className="w-full" disabled={createEndereco.isPending}>
                       {createEndereco.isPending ? "Salvando..." : "Salvar Endereço"}
                     </Button>
@@ -222,7 +431,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
           </Card>
         </TabsContent>
 
-        {/* Obras */}
+        {/* Obras Tab */}
         <TabsContent value="obras">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
