@@ -147,6 +147,11 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
     setEditing(false);
   };
 
+  const handleDelete = async () => {
+    await deleteCliente.mutateAsync(c.id);
+    onBack();
+  };
+
   const handleAddObra = async () => {
     if (!novaObra.nome) return;
     await createObra.mutateAsync({ cliente_id: c.id, ...novaObra });
@@ -212,6 +217,27 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
               <Mail className="h-3.5 w-3.5" /> E-mail
             </Button>
           )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" /> Excluir
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação é irreversível. O cliente <strong>{c.nome}</strong> e todos os seus dados (endereços, obras, contatos) serão removidos permanentemente.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
