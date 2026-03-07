@@ -78,6 +78,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
     telefone: c.telefone || "",
     whatsapp: c.whatsapp || "",
     observacoes: c.observacoes || "",
+    aniversario: c.aniversario || "",
   });
 
   const [novaObra, setNovaObra] = useState({ nome: "", endereco: "", status: "ativa" });
@@ -121,6 +122,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
       telefone: c.telefone || "",
       whatsapp: c.whatsapp || "",
       observacoes: c.observacoes || "",
+      aniversario: c.aniversario || "",
     });
     setEditing(true);
   };
@@ -139,6 +141,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
       telefone: editForm.telefone || null,
       whatsapp: editForm.whatsapp || null,
       observacoes: editForm.observacoes || null,
+      aniversario: editForm.aniversario || null,
     });
     setEditing(false);
   };
@@ -296,6 +299,10 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
                   <div>
                     <Label>WhatsApp</Label>
                     <Input value={editForm.whatsapp} onChange={(e) => setEditForm({ ...editForm, whatsapp: maskCelular(e.target.value) })} placeholder="(11) 99999-0000" maxLength={15} />
+                  </div>
+                  <div>
+                    <Label>Aniversário</Label>
+                    <Input type="date" value={editForm.aniversario} onChange={(e) => setEditForm({ ...editForm, aniversario: e.target.value })} />
                   </div>
                   <div className="col-span-2">
                     <Label>Observações</Label>
