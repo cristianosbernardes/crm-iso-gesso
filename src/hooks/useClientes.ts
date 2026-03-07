@@ -59,10 +59,22 @@ export interface ClienteContato {
   created_at: string;
 }
 
+export interface ClienteHistorico {
+  id: string;
+  cliente_id: string;
+  user_id: string | null;
+  user_name: string | null;
+  tipo: string;
+  descricao: string;
+  detalhes: Record<string, unknown> | null;
+  created_at: string;
+}
+
 export type ClienteComRelacoes = Cliente & {
   obras: ClienteObra[];
   enderecos: ClienteEndereco[];
   contatos: ClienteContato[];
+  historico: ClienteHistorico[];
 };
 
 export function useClientes() {
