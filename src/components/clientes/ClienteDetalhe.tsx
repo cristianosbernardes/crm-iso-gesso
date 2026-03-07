@@ -174,6 +174,7 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
       estado: novoEnd.estado || undefined,
       cep: novoEnd.cep || undefined,
     });
+    await logHistorico(c.id, "endereco_adicionado", `Endereço "${novoEnd.logradouro}" adicionado`);
     setNovoEnd({ tipo: "entrega", logradouro: "", numero: "", bairro: "", cidade: "", estado: "", cep: "", complemento: "" });
     setCepError("");
     setEndDialogOpen(false);
