@@ -517,6 +517,11 @@ const Configuracoes = () => (
         </Card>
       </TabsContent>
 
+      {/* ── Cargos ── */}
+      <TabsContent value="cargos">
+        <GestorCargos />
+      </TabsContent>
+
       {/* ── Integrações ── */}
       <TabsContent value="integracoes">
         <Card>
