@@ -128,12 +128,25 @@ export function useClientes() {
     },
   });
 
+  const historicoQuery = useQuery({
+    queryKey: ["cliente_historico"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cliente_historico")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as ClienteHistorico[];
+    },
+  });
+
   // Combine data
   const clientesComRelacoes: ClienteComRelacoes[] = (clientesQuery.data || []).map((c) => ({
     ...c,
     obras: (obrasQuery.data || []).filter((o) => o.cliente_id === c.id),
     enderecos: (enderecosQuery.data || []).filter((e) => e.cliente_id === c.id),
     contatos: (contatosQuery.data || []).filter((ct) => ct.cliente_id === c.id),
+    historico: (historicoQuery.data || []).filter((h) => h.cliente_id === c.id),
   }));
 
   const invalidateAll = () => {
@@ -141,6 +154,20 @@ export function useClientes() {
     qc.invalidateQueries({ queryKey: ["cliente_obras"] });
     qc.invalidateQueries({ queryKey: ["cliente_enderecos"] });
     qc.invalidateQueries({ queryKey: ["cliente_contatos"] });
+    qc.invalidateQueries({ queryKey: ["cliente_historico"] });
+  };
+
+  const logHistorico = async (clienteId: string, tipo: string, descricao: string, detalhes?: Record<string, unknown>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user?.id || "").single();
+    await supabase.from("cliente_historico").insert({
+      cliente_id: clienteId,
+      user_id: user?.id,
+      user_name: profile?.full_name || user?.email || "Sistema",
+      tipo,
+      descricao,
+      detalhes: detalhes || null,
+    });
   };
 
   const createCliente = useMutation({
