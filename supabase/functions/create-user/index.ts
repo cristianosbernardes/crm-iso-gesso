@@ -17,9 +17,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { email, password, role } = await req.json();
+    const { email, password, role, full_name, phone, cargo } = await req.json();
 
-    // Verify the request comes from an authenticated admin or is the initial seed
+    // Verify the request comes from an authenticated admin
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       const supabaseClient = createClient(
@@ -34,7 +34,6 @@ serve(async (req) => {
         });
       }
 
-      // Check if caller is admin
       const { data: roles } = await supabaseAdmin
         .from("user_roles")
         .select("role")
@@ -47,7 +46,7 @@ serve(async (req) => {
         });
       }
     } else {
-      // Allow unauthenticated only if no users exist yet
+      // Allow unauthenticated only if no users exist yet (seed)
       const { data: existingRoles } = await supabaseAdmin
         .from("user_roles")
         .select("id")
@@ -65,14 +64,29 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true,
+      user_metadata: { full_name: full_name || email },
     });
 
     if (createError) throw createError;
 
+    // Update profile with additional fields
+    const profileUpdate: Record<string, unknown> = {};
+    if (full_name) profileUpdate.full_name = full_name;
+    if (phone) profileUpdate.phone = phone;
+    if (cargo) profileUpdate.cargo = cargo;
+
+    if (Object.keys(profileUpdate).length > 0) {
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .update(profileUpdate)
+        .eq("id", userData.user.id);
+      if (profileError) console.error("Profile update error:", profileError);
+    }
+
     // Assign role
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: userData.user.id, role: role || "admin" });
+      .insert({ user_id: userData.user.id, role: role || "tecnico" });
 
     if (roleError) throw roleError;
 

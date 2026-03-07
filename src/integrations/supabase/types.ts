@@ -17,26 +17,41 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cargo: string | null
+          comissao_habilitada: boolean
+          comissao_percent: number
           created_at: string
           email: string
           full_name: string | null
           id: string
+          phone: string | null
+          status: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          cargo?: string | null
+          comissao_habilitada?: boolean
+          comissao_percent?: number
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          phone?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          cargo?: string | null
+          comissao_habilitada?: boolean
+          comissao_percent?: number
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          phone?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
