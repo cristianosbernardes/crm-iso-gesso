@@ -54,7 +54,7 @@ const maskCEP = (v: string) => {
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 const Clientes = () => {
-  const { clientes, isLoading, createCliente } = useClientes();
+  const { clientes, isLoading, createCliente, createEndereco } = useClientes();
   const [search, setSearch] = useState("");
   const [clienteSelecionado, setClienteSelecionado] = useState<ClienteComRelacoes | null>(null);
   const [filtroStatus, setFiltroStatus] = useState("todos");
