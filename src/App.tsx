@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
@@ -30,28 +32,30 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="materiais" element={<Navigate to="/dashboard/produtos" replace />} />
-            <Route path="produtos" element={<Produtos />} />
-            <Route path="produtos/:id" element={<ProdutoDetalhe />} />
-            <Route path="clientes" element={<Clientes />} />
-            <Route path="usuarios" element={<Usuarios />} />
-            <Route path="calculadora" element={<Calculadora />} />
-            <Route path="agenda" element={<Agenda />} />
-            <Route path="financeiro" element={<Financeiro />} />
-            <Route path="logistica" element={<Logistica />} />
-            <Route path="documentos" element={<Documentos />} />
-            <Route path="bi" element={<BiAvancado />} />
-            <Route path="notificacoes" element={<Notificacoes />} />
-            <Route path="perfil" element={<Perfil />} />
-            <Route path="ajuda" element={<Ajuda />} />
-            <Route path="configuracoes" element={<Configuracoes />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="materiais" element={<Navigate to="/dashboard/produtos" replace />} />
+              <Route path="produtos" element={<Produtos />} />
+              <Route path="produtos/:id" element={<ProdutoDetalhe />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="usuarios" element={<Usuarios />} />
+              <Route path="calculadora" element={<Calculadora />} />
+              <Route path="agenda" element={<Agenda />} />
+              <Route path="financeiro" element={<Financeiro />} />
+              <Route path="logistica" element={<Logistica />} />
+              <Route path="documentos" element={<Documentos />} />
+              <Route path="bi" element={<BiAvancado />} />
+              <Route path="notificacoes" element={<Notificacoes />} />
+              <Route path="perfil" element={<Perfil />} />
+              <Route path="ajuda" element={<Ajuda />} />
+              <Route path="configuracoes" element={<Configuracoes />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
