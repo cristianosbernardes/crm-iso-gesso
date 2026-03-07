@@ -212,12 +212,18 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
             </Button>
           )}
           {c.whatsapp && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`https://wa.me/55${c.whatsapp!.replace(/\D/g, "")}`, "_blank")}>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              logHistorico(c.id, "whatsapp_enviado", `WhatsApp enviado para ${c.whatsapp}`);
+              window.open(`https://wa.me/55${c.whatsapp!.replace(/\D/g, "")}`, "_blank");
+            }}>
               <Send className="h-3.5 w-3.5" /> WhatsApp
             </Button>
           )}
           {c.email && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`mailto:${c.email}`)}>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              logHistorico(c.id, "email_enviado", `E-mail enviado para ${c.email}`);
+              window.open(`mailto:${c.email}`);
+            }}>
               <Mail className="h-3.5 w-3.5" /> E-mail
             </Button>
           )}
@@ -267,9 +273,10 @@ const ClienteDetalhe = ({ cliente: c, onBack }: Props) => {
 
       {/* Tabs: Dados (info + endereços) | Obras */}
       <Tabs defaultValue="dados" className="space-y-4">
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
+        <TabsList className="grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="dados" className="gap-1.5 text-xs"><User className="h-3.5 w-3.5" /> Dados</TabsTrigger>
           <TabsTrigger value="obras" className="gap-1.5 text-xs"><Building2 className="h-3.5 w-3.5" /> Obras</TabsTrigger>
+          <TabsTrigger value="historico" className="gap-1.5 text-xs"><History className="h-3.5 w-3.5" /> Histórico</TabsTrigger>
         </TabsList>
 
         {/* Dados Tab */}
